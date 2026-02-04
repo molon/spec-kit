@@ -477,14 +477,14 @@ project/
 │   │       ├── setup-plan.sh
 │   │       └── update-agent-context.sh
 │   └── templates/                   # Template files
-│       ├── agent-file-template.md   # AI Agent rules template
+│       ├── agent-file-template.md   # AI Agent rules template (used by update-agent-context.sh)
 │       ├── checklist-template.md    # Checklist template
 │       ├── plan-template.md         # Implementation plan template
 │       ├── spec-template.md         # Feature spec template
 │       └── tasks-template.md        # Task list template
 ├── .windsurf/                       # Windsurf IDE integration (other AI tools have corresponding dirs)
 │   ├── rules/                       # Windsurf rules
-│   │   └── specify-rules.md         # Spec Kit rules definition
+│   │   └── specify-rules.md         # AI Agent rules (generated/updated by update-agent-context.sh)
 │   └── workflows/                   # Windsurf workflows (command definitions)
 │       ├── speckit.analyze.md       # Consistency analysis command
 │       ├── speckit.checklist.md     # Checklist command
@@ -510,6 +510,65 @@ project/
             ├── ux.md                # UX check (/speckit.checklist on demand)
             └── security.md          # Security check (/speckit.checklist on demand)
 ```
+
+## AI Agent Context Update
+
+### What is Agent Context?
+
+Spec Kit supports multiple AI coding assistants (Claude, Windsurf, Cursor, Copilot, etc.). Each AI tool has its own rules file that provides project context information to the AI (tech stack, directory structure, recent changes, etc.).
+
+### Related Files
+
+| File                      | Location                 | Description                       |
+| ------------------------- | ------------------------ | --------------------------------- |
+| `agent-file-template.md`  | `.specify/templates/`    | Template for AI Agent rules files |
+| `specify-rules.md`        | `.windsurf/rules/` etc.  | Generated AI Agent rules file     |
+| `update-agent-context.sh` | `.specify/scripts/bash/` | Update script                     |
+
+### Workflow
+
+```
+plan.md (project metadata source)
+    │
+    ▼
+update-agent-context.sh (parses plan.md)
+    │
+    ├─→ Reads agent-file-template.md (template)
+    │
+    └─→ Generates/updates rules files for each AI tool
+        ├─→ .windsurf/rules/specify-rules.md
+        ├─→ .cursor/rules/specify-rules.mdc
+        ├─→ CLAUDE.md
+        └─→ Other AI tool files...
+```
+
+### Trigger Timing
+
+The `update-agent-context.sh` script is **automatically triggered** by **`/speckit.plan`** after Phase 1 completion:
+
+```yaml
+# Defined in plan.md command template
+agent_scripts:
+  sh: scripts/bash/update-agent-context.sh __AGENT__
+  ps: scripts/powershell/update-agent-context.ps1 -AgentType __AGENT__
+```
+
+Can also be run manually:
+
+```bash
+# Update all existing AI Agent rules files
+./.specify/scripts/bash/update-agent-context.sh
+
+# Update only a specific AI tool's rules file
+./.specify/scripts/bash/update-agent-context.sh windsurf
+./.specify/scripts/bash/update-agent-context.sh claude
+```
+
+### Manual Run Scenarios
+
+- After project tech stack changes outside of `plan.md`
+- When you need to update a specific AI tool's rules file separately
+- When debugging or testing AI Agent context
 
 ## Best Practices
 

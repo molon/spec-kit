@@ -477,14 +477,14 @@ project/
 │   │       ├── setup-plan.sh
 │   │       └── update-agent-context.sh
 │   └── templates/                   # 模板文件
-│       ├── agent-file-template.md   # AI Agent 规则模板
+│       ├── agent-file-template.md   # AI Agent 规则模板（update-agent-context.sh 使用）
 │       ├── checklist-template.md    # 检查清单模板
 │       ├── plan-template.md         # 实现计划模板
 │       ├── spec-template.md         # 功能规格模板
 │       └── tasks-template.md        # 任务列表模板
 ├── .windsurf/                       # Windsurf IDE 集成（其他 AI 工具有对应目录）
 │   ├── rules/                       # Windsurf 规则
-│   │   └── specify-rules.md         # Spec Kit 规则定义
+│   │   └── specify-rules.md         # AI Agent 规则（update-agent-context.sh 生成/更新）
 │   └── workflows/                   # Windsurf 工作流（命令定义）
 │       ├── speckit.analyze.md       # 一致性分析命令
 │       ├── speckit.checklist.md     # 检查清单命令
@@ -510,6 +510,65 @@ project/
             ├── ux.md                # UX 检查（/speckit.checklist 按需生成）
             └── security.md          # 安全检查（/speckit.checklist 按需生成）
 ```
+
+## AI Agent 上下文更新
+
+### 什么是 Agent 上下文？
+
+Spec Kit 支持多种 AI 编程助手（Claude、Windsurf、Cursor、Copilot 等）。每个 AI 工具都有自己的规则文件，用于向 AI 提供项目上下文信息（技术栈、目录结构、最近变更等）。
+
+### 相关文件
+
+| 文件                      | 位置                     | 说明                     |
+| ------------------------- | ------------------------ | ------------------------ |
+| `agent-file-template.md`  | `.specify/templates/`    | AI Agent 规则文件的模板  |
+| `specify-rules.md`        | `.windsurf/rules/` 等    | 生成的 AI Agent 规则文件 |
+| `update-agent-context.sh` | `.specify/scripts/bash/` | 更新脚本                 |
+
+### 工作流程
+
+```
+plan.md（项目元数据来源）
+    │
+    ▼
+update-agent-context.sh（解析 plan.md）
+    │
+    ├─→ 读取 agent-file-template.md（模板）
+    │
+    └─→ 生成/更新各 AI 工具的规则文件
+        ├─→ .windsurf/rules/specify-rules.md
+        ├─→ .cursor/rules/specify-rules.mdc
+        ├─→ CLAUDE.md
+        └─→ 其他 AI 工具对应文件...
+```
+
+### 触发时机
+
+`update-agent-context.sh` 脚本由 **`/speckit.plan`** 命令在 Phase 1 完成后**自动触发**：
+
+```yaml
+# 在 plan.md 命令模板中定义
+agent_scripts:
+  sh: scripts/bash/update-agent-context.sh __AGENT__
+  ps: scripts/powershell/update-agent-context.ps1 -AgentType __AGENT__
+```
+
+也可以手动运行：
+
+```bash
+# 更新所有已存在的 AI Agent 规则文件
+./.specify/scripts/bash/update-agent-context.sh
+
+# 只更新特定 AI 工具的规则文件
+./.specify/scripts/bash/update-agent-context.sh windsurf
+./.specify/scripts/bash/update-agent-context.sh claude
+```
+
+### 手动运行场景
+
+- 项目技术栈在 `plan.md` 之外发生变化后
+- 需要单独更新某个 AI 工具的规则文件时
+- 调试或测试 AI Agent 上下文时
 
 ## 最佳实践
 
