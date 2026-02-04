@@ -371,51 +371,144 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 > **Note**: There is currently no command dedicated to only checking checklists. To check separately, manually review the `checklists/` directory.
 
+### Checklist Creation and Updates
+
+| Checklist Type                  | Created By           | Auto-updates Status                         | Manual Marking                   |
+| ------------------------------- | -------------------- | ------------------------------------------- | -------------------------------- |
+| `requirements.md`               | `/speckit.specify`   | ✅ Auto-updates pass/fail during validation | Not needed                       |
+| Domain checklists (ux.md, etc.) | `/speckit.checklist` | ❌ No                                       | ✅ Requires manual `[X]` marking |
+
+**Notes**:
+
+- `/speckit.specify` auto-generates `requirements.md` and automatically updates each item's pass/fail status during validation
+- `/speckit.checklist` creates domain checklists (e.g., ux.md, security.md) that require users to manually mark completion (`[ ]` → `[X]`) after review
+- `/speckit.implement` only reads checklist status for statistics, does not modify checklist files
+
 ### Actions After Constitution Update
 
-1. **Recommended**: Use `/speckit.constitution` to modify constitution (auto-triggers consistency propagation)
-2. Run `/speckit.analyze` to check if existing artifacts comply with new constitution
-3. If violations found, run `/speckit.plan` to regenerate plan
-4. Run `/speckit.tasks` to regenerate tasks
+**Recommended Flow**: Use `/speckit.constitution` command to modify constitution
+
+```bash
+# 1. Run constitution command, describe your changes
+/speckit.constitution Add new security principle: all user input must be validated
+
+# The command will automatically:
+# - Update /memory/constitution.md
+# - Execute consistency propagation checklist
+# - Update related template files
+# - Generate sync impact report
+# - Update version number
+```
+
+**If you directly edited the constitution file**:
+
+```bash
+# 1. Run constitution command to trigger consistency propagation
+/speckit.constitution Confirm and propagate recent constitution changes
+
+# 2. Check if existing artifacts comply with new constitution
+/speckit.analyze
+```
+
+**Follow-up Steps**:
+
+1. Run `/speckit.analyze` to check if existing artifacts comply with new constitution
+2. If violations found, run `/speckit.plan` to regenerate plan
+3. Run `/speckit.tasks` to regenerate tasks
+
+**New features automatically use new constitution**: Subsequently created features will automatically use the new constitution, `/speckit.plan` will read the new constitution and apply gates.
+
+### Constitution Check in Plan Template
+
+The plan template (`plan-template.md`) contains a "Constitution Check" section:
+
+```markdown
+## Constitution Check
+
+_Gating: Must pass before Phase 0 research. Re-check after Phase 1 design._
+
+[Gates determined based on constitution file]
+```
+
+- `/speckit.plan` command fills this section based on the constitution file
+- Gates must pass before Phase 0 research
+- Re-check required after Phase 1 design
+
+### Constitution Dependency Diagram
+
+```
+constitution.md (Source of Truth)
+    │
+    ├─→ /speckit.constitution command (read + update + consistency propagation) ⭐
+    │   ├─→ Updates constitution.md
+    │   ├─→ Updates templates/plan-template.md
+    │   ├─→ Updates templates/spec-template.md
+    │   ├─→ Updates templates/tasks-template.md
+    │   ├─→ Updates templates/commands/*.md
+    │   └─→ Generates sync impact report
+    │
+    ├─→ /speckit.plan command (reads directly)
+    │   └─→ specs/*/plan.md (contains Constitution Check section)
+    │
+    └─→ /speckit.analyze command (reads directly)
+        └─→ Consistency report (includes constitution alignment issues)
+
+Note: The following commands do NOT directly read constitution:
+- /speckit.specify
+- /speckit.clarify
+- /speckit.tasks
+- /speckit.checklist
+- /speckit.implement
+- /speckit.taskstoissues
+```
 
 ## Directory Structure
 
 ```
 project/
-├── memory/
-│   └── constitution.md              # Project constitution (core principles)
-├── specs/
-│   └── 001-feature-name/            # Feature directory (created by /speckit.specify)
-│       ├── spec.md                  # Feature specification (/speckit.specify)
-│       ├── plan.md                  # Implementation plan (/speckit.plan)
-│       ├── tasks.md                 # Task list (/speckit.tasks)
-│       ├── research.md              # Research docs (/speckit.plan)
-│       ├── data-model.md            # Data model (/speckit.plan)
-│       ├── quickstart.md            # Quick start (/speckit.plan)
-│       ├── contracts/               # API contracts (/speckit.plan)
-│       │   └── api.md
-│       └── checklists/              # Checklists
-│           ├── requirements.md      # Spec quality check (/speckit.specify auto)
-│           ├── ux.md                # UX check (/speckit.checklist on demand)
-│           └── security.md          # Security check (/speckit.checklist on demand)
-├── templates/                       # Template files (provided by Spec Kit)
-│   ├── spec-template.md
-│   ├── plan-template.md
-│   ├── tasks-template.md
-│   ├── checklist-template.md
-│   └── commands/                    # Command definitions
-│       ├── constitution.md
-│       ├── specify.md
-│       ├── clarify.md
-│       ├── plan.md
-│       ├── tasks.md
-│       ├── checklist.md
-│       ├── analyze.md
-│       ├── taskstoissues.md
-│       └── implement.md
-└── scripts/                         # Helper scripts (provided by Spec Kit)
-    ├── bash/
-    └── powershell/
+├── .specify/                        # Spec Kit core directory (created by specify init)
+│   ├── memory/
+│   │   └── constitution.md          # Project constitution (core principles & constraints)
+│   ├── scripts/                     # Helper scripts
+│   │   └── bash/
+│   │       ├── check-prerequisites.sh
+│   │       ├── common.sh
+│   │       ├── create-new-feature.sh
+│   │       ├── setup-plan.sh
+│   │       └── update-agent-context.sh
+│   └── templates/                   # Template files
+│       ├── agent-file-template.md   # AI Agent rules template
+│       ├── checklist-template.md    # Checklist template
+│       ├── plan-template.md         # Implementation plan template
+│       ├── spec-template.md         # Feature spec template
+│       └── tasks-template.md        # Task list template
+├── .windsurf/                       # Windsurf IDE integration (other AI tools have corresponding dirs)
+│   ├── rules/                       # Windsurf rules
+│   │   └── specify-rules.md         # Spec Kit rules definition
+│   └── workflows/                   # Windsurf workflows (command definitions)
+│       ├── speckit.analyze.md       # Consistency analysis command
+│       ├── speckit.checklist.md     # Checklist command
+│       ├── speckit.clarify.md       # Clarify spec command
+│       ├── speckit.constitution.md  # Constitution management command
+│       ├── speckit.implement.md     # Implementation execution command
+│       ├── speckit.plan.md          # Implementation plan command
+│       ├── speckit.specify.md       # Spec definition command
+│       ├── speckit.tasks.md         # Task generation command
+│       └── speckit.taskstoissues.md # Tasks to Issues command
+└── specs/                           # Feature specs directory (generated at runtime)
+    └── 001-feature-name/            # Feature directory (created by /speckit.specify)
+        ├── spec.md                  # Feature specification (/speckit.specify)
+        ├── plan.md                  # Implementation plan (/speckit.plan)
+        ├── tasks.md                 # Task list (/speckit.tasks)
+        ├── research.md              # Research docs (/speckit.plan)
+        ├── data-model.md            # Data model (/speckit.plan)
+        ├── quickstart.md            # Quick start (/speckit.plan)
+        ├── contracts/               # API contracts (/speckit.plan)
+        │   └── api.md
+        └── checklists/              # Checklists
+            ├── requirements.md      # Spec quality check (/speckit.specify auto)
+            ├── ux.md                # UX check (/speckit.checklist on demand)
+            └── security.md          # Security check (/speckit.checklist on demand)
 ```
 
 ## Best Practices
@@ -461,3 +554,43 @@ Do not modify constitution during implementation. If changes needed:
 2. Update constitution
 3. Run `/speckit.analyze` to check impact
 4. Update affected artifacts
+
+### 4. Verify Consistency in PRs (Manual Best Practice)
+
+> **Note**: This is a **manual best practice recommendation**. Spec Kit currently has no CI integration or automated PR checks.
+
+Before submitting a PR, it's recommended to:
+
+1. Manually run `/speckit.analyze` to check consistency
+2. Manually add the following checklist to PR description:
+
+```markdown
+## PR Checklist (Manual)
+
+- [ ] Ran /speckit.analyze to check constitution alignment
+- [ ] Plan passes all constitution gates
+- [ ] No CRITICAL level constitution violations
+```
+
+### 5. Constitution Version Control
+
+`/speckit.constitution` command automatically manages constitution version numbers following semantic versioning:
+
+- **MAJOR**: Backward incompatible governance/principle removals or redefinitions
+- **MINOR**: New principle/section added or materially expanded guidance
+- **PATCH**: Clarifications, wording, typo fixes, non-semantic refinements
+
+## Limitations and Notes
+
+### Current Limitations
+
+1. **No automated propagation**: Constitution updates don't automatically update existing artifacts (spec/plan/tasks)
+2. **No automatic notifications**: Constitution updates don't automatically notify developers
+3. **No git hooks**: No git hooks to automatically trigger consistency checks
+4. **Some commands don't read constitution**: `/speckit.specify`, `/speckit.clarify`, etc. don't directly read constitution
+
+### Important Notes
+
+1. **Manual verification is required**: After constitution updates, manually run `/speckit.analyze`
+2. **Existing artifacts need manual updates**: After constitution updates, manually regenerate affected artifacts
+3. **Constitution conflicts are CRITICAL**: `/speckit.analyze` marks constitution conflicts as CRITICAL level

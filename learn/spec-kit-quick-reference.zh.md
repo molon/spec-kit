@@ -371,51 +371,144 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 > **注意**：目前没有专门只检查清单的命令。如需单独检查，请手动查看 `checklists/` 目录。
 
+### Checklist 的创建与更新
+
+| 清单类型             | 创建者               | 自动更新状态                | 用户手动标记          |
+| -------------------- | -------------------- | --------------------------- | --------------------- |
+| `requirements.md`    | `/speckit.specify`   | ✅ 验证时自动更新 pass/fail | 不需要                |
+| 领域清单（ux.md 等） | `/speckit.checklist` | ❌ 否                       | ✅ 需要手动标记 `[X]` |
+
+**说明**：
+
+- `/speckit.specify` 在创建规格说明时会自动生成 `requirements.md`，并在验证过程中自动更新每个项目的 pass/fail 状态
+- `/speckit.checklist` 创建的领域清单（如 ux.md, security.md）需要用户在审查后手动标记完成（`[ ]` → `[X]`）
+- `/speckit.implement` 只读取清单状态统计完成情况，不会修改清单文件
+
 ### 宪法更新后的操作
 
-1. **推荐**：使用 `/speckit.constitution` 修改宪法（自动触发一致性传播）
-2. 运行 `/speckit.analyze` 检查现有工件是否符合新宪法
-3. 如有违规，运行 `/speckit.plan` 重新生成计划
-4. 运行 `/speckit.tasks` 重新生成任务
+**推荐流程**：使用 `/speckit.constitution` 命令修改宪法
+
+```bash
+# 1. 运行 constitution 命令，描述你要做的修改
+/speckit.constitution 添加新的安全原则：所有用户输入必须验证
+
+# 该命令会自动：
+# - 更新 /memory/constitution.md
+# - 执行一致性传播检查清单
+# - 更新相关模板文件
+# - 生成同步影响报告
+# - 更新版本号
+```
+
+**如果直接编辑了宪法文件**：
+
+```bash
+# 1. 运行 constitution 命令来触发一致性传播
+/speckit.constitution 确认并传播最近的宪法修改
+
+# 2. 检查现有工件是否符合新宪法
+/speckit.analyze
+```
+
+**后续步骤**：
+
+1. 运行 `/speckit.analyze` 检查现有工件是否符合新宪法
+2. 如有违规，运行 `/speckit.plan` 重新生成计划
+3. 运行 `/speckit.tasks` 重新生成任务
+
+**新功能自动应用新宪法**：后续创建的新功能会自动使用新宪法，`/speckit.plan` 会读取新宪法并应用门控。
+
+### 计划模板中的宪法检查
+
+计划模板（`plan-template.md`）包含一个 "Constitution Check" 部分：
+
+```markdown
+## Constitution Check
+
+_Gating: Must pass before Phase 0 research. Re-check after Phase 1 design._
+
+[Gates determined based on constitution file]
+```
+
+- `/speckit.plan` 命令会根据宪法文件填充这个部分
+- 门控在第 0 阶段研究前必须通过
+- 在第 1 阶段设计后需要重新检查
+
+### 宪法依赖关系图
+
+```
+constitution.md（真实来源）
+    │
+    ├─→ /speckit.constitution 命令（读取 + 更新 + 一致性传播）⭐
+    │   ├─→ 更新 constitution.md
+    │   ├─→ 更新 templates/plan-template.md
+    │   ├─→ 更新 templates/spec-template.md
+    │   ├─→ 更新 templates/tasks-template.md
+    │   ├─→ 更新 templates/commands/*.md
+    │   └─→ 生成同步影响报告
+    │
+    ├─→ /speckit.plan 命令（直接读取）
+    │   └─→ specs/*/plan.md（包含 Constitution Check 部分）
+    │
+    └─→ /speckit.analyze 命令（直接读取）
+        └─→ 一致性报告（包含宪法对齐问题）
+
+注意：以下命令不直接读取宪法：
+- /speckit.specify
+- /speckit.clarify
+- /speckit.tasks
+- /speckit.checklist
+- /speckit.implement
+- /speckit.taskstoissues
+```
 
 ## 目录结构
 
 ```
 project/
-├── memory/
-│   └── constitution.md              # 项目宪法（核心原则）
-├── specs/
-│   └── 001-feature-name/            # 功能目录（由 /speckit.specify 创建）
-│       ├── spec.md                  # 功能规格说明（/speckit.specify 生成）
-│       ├── plan.md                  # 实现计划（/speckit.plan 生成）
-│       ├── tasks.md                 # 任务列表（/speckit.tasks 生成）
-│       ├── research.md              # 研究文档（/speckit.plan 生成）
-│       ├── data-model.md            # 数据模型（/speckit.plan 生成）
-│       ├── quickstart.md            # 快速开始（/speckit.plan 生成）
-│       ├── contracts/               # API 契约（/speckit.plan 生成）
-│       │   └── api.md
-│       └── checklists/              # 检查清单
-│           ├── requirements.md      # 规格质量检查（/speckit.specify 自动生成）
-│           ├── ux.md                # UX 检查（/speckit.checklist 按需生成）
-│           └── security.md          # 安全检查（/speckit.checklist 按需生成）
-├── templates/                       # 模板文件（Spec Kit 提供）
-│   ├── spec-template.md
-│   ├── plan-template.md
-│   ├── tasks-template.md
-│   ├── checklist-template.md
-│   └── commands/                    # 命令定义
-│       ├── constitution.md
-│       ├── specify.md
-│       ├── clarify.md
-│       ├── plan.md
-│       ├── tasks.md
-│       ├── checklist.md
-│       ├── analyze.md
-│       ├── taskstoissues.md
-│       └── implement.md
-└── scripts/                         # 辅助脚本（Spec Kit 提供）
-    ├── bash/
-    └── powershell/
+├── .specify/                        # Spec Kit 核心目录（由 specify init 创建）
+│   ├── memory/
+│   │   └── constitution.md          # 项目宪法（核心原则和约束）
+│   ├── scripts/                     # 辅助脚本
+│   │   └── bash/
+│   │       ├── check-prerequisites.sh
+│   │       ├── common.sh
+│   │       ├── create-new-feature.sh
+│   │       ├── setup-plan.sh
+│   │       └── update-agent-context.sh
+│   └── templates/                   # 模板文件
+│       ├── agent-file-template.md   # AI Agent 规则模板
+│       ├── checklist-template.md    # 检查清单模板
+│       ├── plan-template.md         # 实现计划模板
+│       ├── spec-template.md         # 功能规格模板
+│       └── tasks-template.md        # 任务列表模板
+├── .windsurf/                       # Windsurf IDE 集成（其他 AI 工具有对应目录）
+│   ├── rules/                       # Windsurf 规则
+│   │   └── specify-rules.md         # Spec Kit 规则定义
+│   └── workflows/                   # Windsurf 工作流（命令定义）
+│       ├── speckit.analyze.md       # 一致性分析命令
+│       ├── speckit.checklist.md     # 检查清单命令
+│       ├── speckit.clarify.md       # 澄清规格命令
+│       ├── speckit.constitution.md  # 宪法管理命令
+│       ├── speckit.implement.md     # 实现执行命令
+│       ├── speckit.plan.md          # 实现计划命令
+│       ├── speckit.specify.md       # 规格定义命令
+│       ├── speckit.tasks.md         # 任务生成命令
+│       └── speckit.taskstoissues.md # 任务转 Issues 命令
+└── specs/                           # 功能规格目录（运行时生成）
+    └── 001-feature-name/            # 功能目录（由 /speckit.specify 创建）
+        ├── spec.md                  # 功能规格说明（/speckit.specify 生成）
+        ├── plan.md                  # 实现计划（/speckit.plan 生成）
+        ├── tasks.md                 # 任务列表（/speckit.tasks 生成）
+        ├── research.md              # 研究文档（/speckit.plan 生成）
+        ├── data-model.md            # 数据模型（/speckit.plan 生成）
+        ├── quickstart.md            # 快速开始（/speckit.plan 生成）
+        ├── contracts/               # API 契约（/speckit.plan 生成）
+        │   └── api.md
+        └── checklists/              # 检查清单
+            ├── requirements.md      # 规格质量检查（/speckit.specify 自动生成）
+            ├── ux.md                # UX 检查（/speckit.checklist 按需生成）
+            └── security.md          # 安全检查（/speckit.checklist 按需生成）
 ```
 
 ## 最佳实践
@@ -461,3 +554,43 @@ project/
 2. 更新宪法
 3. 运行 `/speckit.analyze` 检查影响
 4. 更新受影响的工件
+
+### 4. 在 PR 中验证一致性（手动最佳实践）
+
+> **注意**：这是一个**手动最佳实践建议**，Spec Kit 目前没有 CI 集成或自动化 PR 检查。
+
+在提交 PR 前，建议：
+
+1. 手动运行 `/speckit.analyze` 检查一致性
+2. 在 PR 描述中手动添加以下检查清单：
+
+```markdown
+## PR 检查清单（手动填写）
+
+- [ ] 已运行 /speckit.analyze 检查宪法对齐
+- [ ] 计划通过所有宪法门控
+- [ ] 无 CRITICAL 级别的宪法违规
+```
+
+### 5. 宪法版本控制
+
+`/speckit.constitution` 命令会自动管理宪法版本号，遵循语义版本控制：
+
+- **MAJOR**：向后不兼容的治理/原则删除或重新定义
+- **MINOR**：新增原则/部分或实质性扩展指导
+- **PATCH**：澄清、措辞、拼写修复、非语义性改进
+
+## 限制和注意事项
+
+### 当前限制
+
+1. **没有自动化传播**：宪法更新后不会自动更新现有工件（spec/plan/tasks）
+2. **没有自动通知**：宪法更新后不会自动通知开发人员
+3. **没有 git hooks**：没有自动触发一致性检查的 git hooks
+4. **部分命令不读取宪法**：`/speckit.specify`、`/speckit.clarify` 等命令不直接读取宪法
+
+### 注意事项
+
+1. **手动验证是必需的**：宪法更新后需要手动运行 `/speckit.analyze`
+2. **现有工件需要手动更新**：宪法更新后需要手动重新生成受影响的工件
+3. **宪法冲突是 CRITICAL**：`/speckit.analyze` 会将宪法冲突标记为 CRITICAL 级别
