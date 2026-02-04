@@ -99,26 +99,32 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 **作用**：创建或更新项目宪法，并执行一致性传播到所有依赖的模板。
 
+**创建 vs 更新**：
+
+- 如果 `constitution.md` **不存在** → 创建新宪法
+- 如果 `constitution.md` **已存在** → 更新现有宪法
+- **两种情况都会**执行一致性传播
+
 **输入**：宪法修改描述（自然语言）
 
 **输出**：
 
-- 更新 `/memory/constitution.md`
+- 创建/更新 `/memory/constitution.md`
 - 更新相关模板文件（plan-template.md, spec-template.md 等）
 - 生成同步影响报告
 
 **主要步骤**：
 
-1. 加载现有宪法模板
+1. 加载现有宪法模板（或创建新模板）
 2. 收集/推导占位符的值
 3. 起草更新后的宪法内容
 4. **执行一致性传播检查清单**：
    - 更新 `/templates/plan-template.md` 确保宪法检查对齐
-   - 更新 `/templates/spec-template.md` 检查范围/需求对齐
-   - 更新 `/templates/tasks-template.md` 确保任务分类反映新原则
+   - 更新 `/templates/spec-template.md` 确保 Requirements 部分与宪法约束对齐
+   - 更新 `/templates/tasks-template.md` 确保任务阶段划分反映新原则
    - 更新 `/templates/commands/*.md` 验证无过时引用
    - 更新 README.md、docs/quickstart.md 等文档
-5. 生成同步影响报告
+5. 生成同步影响报告（版本变化、修改的原则、需要更新的模板）
 6. 验证并写入宪法文件
 
 **关键特性**：这是**一致性传播的核心命令**，修改宪法后应该运行此命令。
@@ -173,7 +179,9 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 **作用**：基于规格说明创建技术实现计划。
 
-**输入**：`spec.md`
+**输入**：自动检测当前分支对应的 feature 目录，读取其中的 `spec.md`
+
+- **不需要**手动指定 feature 名称
 
 **输出**：
 
@@ -192,6 +200,12 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 5. 阶段 0：生成研究文档
 6. 阶段 1：生成数据模型、API 契约
 7. **重新评估宪法检查**
+
+**生成后是否需要手动修改？**
+
+- **通常不需要**：生成的 plan.md 应该是完整的
+- **例外情况**：如果有 "NEEDS CLARIFICATION" 标记，需要补充信息
+- **最佳实践**：先运行 `/speckit.analyze` 检查，有问题再修改或重新生成
 
 **关键特性**：这是**生成工件时读取宪法**的命令（`/speckit.analyze` 也会读取宪法用于验证）。
 
@@ -225,11 +239,20 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 ### `/speckit.checklist` - 创建检查清单
 
-**作用**：为特定领域创建自定义检查清单。
+**作用**：为特定领域创建自定义检查清单（"需求的单元测试"）。
 
-**输入**：领域描述（如 "UX 设计"、"安全性"、"性能"）
+**输入**：领域描述（可选，如 "UX 设计"、"安全性"、"性能"）
+
+- 如果提供输入：直接生成对应领域的清单
+- 如果不提供输入：会询问 2-3 个澄清问题后生成
 
 **输出**：`specs/[###-feature]/checklists/[domain].md`
+
+**与 `/speckit.specify` 的区别**：
+
+- `/speckit.specify` **自动**生成 `requirements.md`（规格质量检查）
+- `/speckit.checklist` **按需**生成领域特定清单（如 ux.md, security.md）
+- 两者**不重复**，职责不同
 
 **不涉及**：宪法检查
 
@@ -300,7 +323,9 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 **主要步骤**：
 
-1. **检查清单状态**（如有未完成项，询问是否继续）
+1. **检查清单状态**（扫描 checklists/ 目录，统计完成情况）
+   - 如有未完成项 → 显示状态表并询问是否继续
+   - 全部完成 → 自动继续
 2. 加载实现上下文
 3. 项目设置验证（创建 .gitignore 等）
 4. 解析任务结构
@@ -316,23 +341,35 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 - TDD 方式：测试先于实现
 - 完成的任务标记为 [X]
 
+**关键特性**：这是**唯一会检查 checklists/ 的命令**。
+
 ---
 
 ## 宪法与一致性
 
 ### 哪些命令读取/更新宪法？
 
-| 命令                     | 宪法相关 | 用途                           |
-| ------------------------ | -------- | ------------------------------ |
-| `/speckit.constitution`  | ✅ 更新  | 更新宪法 + 一致性传播到模板 ⭐ |
-| `/speckit.specify`       | ❌       | -                              |
-| `/speckit.clarify`       | ❌       | -                              |
-| `/speckit.plan`          | ✅ 读取  | 填充宪法检查、评估门控         |
-| `/speckit.tasks`         | ❌       | -                              |
-| `/speckit.checklist`     | ❌       | -                              |
-| `/speckit.analyze`       | ✅ 读取  | 验证宪法对齐                   |
-| `/speckit.taskstoissues` | ❌       | -                              |
-| `/speckit.implement`     | ❌       | -                              |
+| 命令                     | 宪法相关 | 用途                          |
+| ------------------------ | -------- | ----------------------------- |
+| `/speckit.constitution`  | ✅ 更新  | 创建/更新宪法 + 一致性传播 ⭐ |
+| `/speckit.specify`       | ❌       | -                             |
+| `/speckit.clarify`       | ❌       | -                             |
+| `/speckit.plan`          | ✅ 读取  | 填充宪法检查、评估门控        |
+| `/speckit.tasks`         | ❌       | -                             |
+| `/speckit.checklist`     | ❌       | -                             |
+| `/speckit.analyze`       | ✅ 读取  | 验证宪法对齐                  |
+| `/speckit.taskstoissues` | ❌       | -                             |
+| `/speckit.implement`     | ❌       | -                             |
+
+### 哪些命令检查 Checklist？
+
+| 命令                     | 检查清单 | 说明                                         |
+| ------------------------ | -------- | -------------------------------------------- |
+| `/speckit.analyze`       | ❌       | 只分析 spec/plan/tasks 一致性，不检查清单    |
+| `/speckit.implement`     | ✅       | 执行前检查 checklists/，未完成会询问是否继续 |
+| `/speckit.taskstoissues` | ❌       | 只读取 tasks.md 创建 Issues，不检查清单      |
+
+> **注意**：目前没有专门只检查清单的命令。如需单独检查，请手动查看 `checklists/` 目录。
 
 ### 宪法更新后的操作
 

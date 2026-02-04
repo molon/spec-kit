@@ -99,26 +99,32 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 **Purpose**: Create or update project constitution and execute consistency propagation to all dependent templates.
 
+**Create vs Update**:
+
+- If `constitution.md` **does not exist** → Creates new constitution
+- If `constitution.md` **already exists** → Updates existing constitution
+- **Both cases** execute consistency propagation
+
 **Input**: Constitution modification description (natural language)
 
 **Output**:
 
-- Updates `/memory/constitution.md`
+- Creates/updates `/memory/constitution.md`
 - Updates related template files (plan-template.md, spec-template.md, etc.)
 - Generates Sync Impact Report
 
 **Main Steps**:
 
-1. Load existing constitution template
+1. Load existing constitution template (or create new one)
 2. Collect/derive values for placeholders
 3. Draft updated constitution content
 4. **Execute consistency propagation checklist**:
    - Updates `/templates/plan-template.md` to ensure Constitution Check aligns
-   - Updates `/templates/spec-template.md` for scope/requirements alignment
-   - Updates `/templates/tasks-template.md` to ensure task categorization reflects new principles
+   - Updates `/templates/spec-template.md` to ensure Requirements section aligns with constitution constraints
+   - Updates `/templates/tasks-template.md` to ensure task phase organization reflects new principles
    - Updates `/templates/commands/*.md` to verify no outdated references
    - Updates README.md, docs/quickstart.md, etc.
-5. Generate Sync Impact Report
+5. Generate Sync Impact Report (version changes, modified principles, templates requiring updates)
 6. Validate and write constitution file
 
 **Key Feature**: This is the **core command for consistency propagation**. Run this command after modifying the constitution.
@@ -173,7 +179,9 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 **Purpose**: Create technical implementation plan based on specification.
 
-**Input**: `spec.md`
+**Input**: Auto-detects feature directory from current branch, reads `spec.md` from it
+
+- **No need** to manually specify feature name
 
 **Output**:
 
@@ -192,6 +200,12 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 5. Phase 0: Generate research documentation
 6. Phase 1: Generate data model, API contracts
 7. **Re-evaluate Constitution Check**
+
+**Do you need to manually modify the generated plan?**
+
+- **Usually not**: Generated plan.md should be complete
+- **Exception**: If there are "NEEDS CLARIFICATION" markers, you need to fill in the information
+- **Best practice**: Run `/speckit.analyze` first to check, modify or regenerate if issues found
 
 **Key Feature**: This command **reads constitution when generating artifacts** (`/speckit.analyze` also reads constitution for validation).
 
@@ -225,11 +239,20 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 ### `/speckit.checklist` - Create Checklist
 
-**Purpose**: Create custom checklists for specific domains.
+**Purpose**: Create custom checklists for specific domains ("unit tests for requirements").
 
-**Input**: Domain description (e.g., "UX design", "security", "performance")
+**Input**: Domain description (optional, e.g., "UX design", "security", "performance")
+
+- If input provided: Directly generates checklist for that domain
+- If no input: Will ask 2-3 clarifying questions before generating
 
 **Output**: `specs/[###-feature]/checklists/[domain].md`
+
+**Difference from `/speckit.specify`**:
+
+- `/speckit.specify` **automatically** generates `requirements.md` (spec quality check)
+- `/speckit.checklist` generates domain-specific checklists **on demand** (e.g., ux.md, security.md)
+- They **do not overlap**, different responsibilities
 
 **Does NOT involve**: Constitution check
 
@@ -300,7 +323,9 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 **Main Steps**:
 
-1. **Check checklist status** (if incomplete items, ask whether to continue)
+1. **Check checklist status** (scans checklists/ directory, counts completion)
+   - If incomplete items → Shows status table and asks whether to continue
+   - All complete → Automatically continues
 2. Load implementation context
 3. Project setup verification (create .gitignore, etc.)
 4. Parse task structure
@@ -316,23 +341,35 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 - TDD approach: tests before implementation
 - Mark completed tasks as [X]
 
+**Key Feature**: This is the **only command that checks checklists/**.
+
 ---
 
 ## Constitution and Consistency
 
 ### Which Commands Read/Update Constitution?
 
-| Command                  | Constitution | Purpose                                         |
-| ------------------------ | ------------ | ----------------------------------------------- |
-| `/speckit.constitution`  | ✅ Updates   | Update constitution + propagate to templates ⭐ |
-| `/speckit.specify`       | ❌           | -                                               |
-| `/speckit.clarify`       | ❌           | -                                               |
-| `/speckit.plan`          | ✅ Reads     | Fill constitution check, evaluate gates         |
-| `/speckit.tasks`         | ❌           | -                                               |
-| `/speckit.checklist`     | ❌           | -                                               |
-| `/speckit.analyze`       | ✅ Reads     | Validate constitution alignment                 |
-| `/speckit.taskstoissues` | ❌           | -                                               |
-| `/speckit.implement`     | ❌           | -                                               |
+| Command                  | Constitution | Purpose                                                |
+| ------------------------ | ------------ | ------------------------------------------------------ |
+| `/speckit.constitution`  | ✅ Updates   | Create/update constitution + propagate to templates ⭐ |
+| `/speckit.specify`       | ❌           | -                                                      |
+| `/speckit.clarify`       | ❌           | -                                                      |
+| `/speckit.plan`          | ✅ Reads     | Fill constitution check, evaluate gates                |
+| `/speckit.tasks`         | ❌           | -                                                      |
+| `/speckit.checklist`     | ❌           | -                                                      |
+| `/speckit.analyze`       | ✅ Reads     | Validate constitution alignment                        |
+| `/speckit.taskstoissues` | ❌           | -                                                      |
+| `/speckit.implement`     | ❌           | -                                                      |
+
+### Which Commands Check Checklists?
+
+| Command                  | Checks Checklists | Notes                                                     |
+| ------------------------ | ----------------- | --------------------------------------------------------- |
+| `/speckit.analyze`       | ❌                | Only analyzes spec/plan/tasks consistency, not checklists |
+| `/speckit.implement`     | ✅                | Checks checklists/ before execution, asks if incomplete   |
+| `/speckit.taskstoissues` | ❌                | Only reads tasks.md to create Issues, not checklists      |
+
+> **Note**: There is currently no command dedicated to only checking checklists. To check separately, manually review the `checklists/` directory.
 
 ### Actions After Constitution Update
 
