@@ -207,6 +207,20 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 - **Exception**: If there are "NEEDS CLARIFICATION" markers, you need to fill in the information
 - **Best practice**: Run `/speckit.analyze` first to check, modify or regenerate if issues found
 
+**Can generated artifacts be adjusted?**
+
+**Yes, this is expected behavior.** One of Spec Kit's core principles is **Continuous Refinement**:
+
+> "Consistency validation happens continuously, not as a one-time gate. AI analyzes specifications for ambiguity, contradictions, and gaps as an ongoing process."
+
+If you're not satisfied with the content of generated documents like `research.md`, `data-model.md`, `contracts/`, you can:
+
+1. **Communicate directly with AI to adjust**: Describe what needs to be modified, let AI regenerate or modify
+2. **Edit manually**: Directly modify file contents
+3. **Re-run the command**: Provide more detailed input, regenerate the document
+
+This iterative refinement process is part of Spec Kit's design, ensuring that final specifications and design documents accurately reflect project requirements.
+
 **Key Feature**: This command **reads constitution when generating artifacts** (`/speckit.analyze` also reads constitution for validation).
 
 ---
