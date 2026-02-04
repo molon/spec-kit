@@ -525,6 +525,154 @@ project/
             └── security.md          # 安全检查（/speckit.checklist 按需生成）
 ```
 
+## 设计工件详解
+
+`/speckit.plan` 命令在 Phase 1 会生成多个设计工件，这些工件在后续流程中被不同命令使用。
+
+### research.md - 研究文档
+
+**生成时机**：`/speckit.plan` Phase 0
+
+**内容**：
+
+- 技术决策及其理由
+- 评估过的替代方案
+- 解决所有 "NEEDS CLARIFICATION" 标记
+
+**使用者**：
+
+- `/speckit.plan` Phase 1（作为前置条件）
+- `/speckit.tasks`（提取设置任务的决策）
+- `/speckit.implement`（获取技术决策和约束）
+
+---
+
+### data-model.md - 数据模型
+
+**生成时机**：`/speckit.plan` Phase 1
+
+**内容**：
+
+- 实体名称、字段、关系
+- 来自需求的验证规则
+- 状态转换（如适用）
+
+**使用者**：
+
+- `/speckit.tasks`（提取实体并映射到用户故事）
+- `/speckit.implement`（获取实体和关系）
+
+---
+
+### contracts/ - API 契约
+
+**生成时机**：`/speckit.plan` Phase 1
+
+**内容**：
+
+- 基于功能需求生成的 API 端点
+- OpenAPI/GraphQL 模式
+- 每个用户操作对应一个端点
+
+**使用者**：
+
+- `/speckit.tasks`（将端点映射到用户故事）
+- `/speckit.implement`（获取 API 规格说明和测试需求）
+- `/speckit.checklist`（提取 API 相关信号）
+
+---
+
+### quickstart.md - 快速开始
+
+**生成时机**：`/speckit.plan` Phase 1
+
+**内容**：
+
+- 集成场景
+- 快速启动指南
+- 测试场景
+
+**使用者**：
+
+- `/speckit.tasks`（获取测试场景）
+- `/speckit.implement`（获取集成场景）
+
+---
+
+### 工件流转图
+
+```
+                        ┌─────────────────────────────────────┐
+                        │        /speckit.constitution        │
+                        │  读取/更新: constitution.md          │
+                        │  传播至: 模板、命令、文档             │
+                        └──────────────┬──────────────────────┘
+                                       │
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                              主流程                                       │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  用户需求                                                                 │
+│      │                                                                   │
+│      ▼                                                                   │
+│  /speckit.specify ─────────────────────────────────────────────────────┐ │
+│      │                                                                 │ │
+│      ├─→ spec.md                                                       │ │
+│      └─→ checklists/requirements.md                                    │ │
+│      │                                                                 │ │
+│      ▼                                                                 │ │
+│  /speckit.clarify（可选）                                               │ │
+│      │                                                                 │ │
+│      └─→ 更新 spec.md                                                  │ │
+│      │                                                                 │ │
+│      ▼                                                                 │ │
+│  /speckit.plan ◀── 读取: spec.md, constitution.md                      │ │
+│      │                                                                 │ │
+│      ├─→ research.md (Phase 0)                                         │ │
+│      ├─→ data-model.md, contracts/, quickstart.md (Phase 1)            │ │
+│      └─→ 自动触发 update-agent-context.sh → specify-rules.md           │ │
+│      │                                                                 │ │
+│      ▼                                                                 │ │
+│  /speckit.tasks ◀── 读取: plan.md, spec.md, [data-model, contracts...] │ │
+│      │                                                                 │ │
+│      └─→ tasks.md                                                      │ │
+│      │                                                                 │ │
+│      ▼                                                                 │ │
+│  /speckit.analyze（推荐）◀── 读取: spec, plan, tasks, constitution     │ │
+│      │                                                                 │ │
+│      └─→ 一致性验证报告                                                 │ │
+│      │                                                                 │ │
+│      ├────────────────────────┬────────────────────────────────────────┘ │
+│      │                        │                                          │
+│      ▼                        ▼                                          │
+│  /speckit.taskstoissues   /speckit.implement                             │
+│  （团队协作）              （个人开发）                                    │
+│      │                        │                                          │
+│      └─→ GitHub Issues        ├─→ 检查 checklists/*                      │
+│                               ├─→ 读取 tasks, plan, [data-model...]      │
+│                               └─→ 代码实现                                │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│  /speckit.checklist（可选，可在 specify 之后任意时机使用）                 │
+│      │                                                                   │
+│      ├─→ 读取: spec.md, plan.md, tasks.md（如存在）                       │
+│      └─→ 输出: checklists/ux.md, checklists/security.md 等                │
+│                                                                          │
+│  💡 推荐在 implement 之前完成 checklist 标记，因为 implement 会检查状态    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+**官方推荐执行顺序**（来自 quickstart.md）：
+
+```
+constitution → specify → clarify → plan → tasks → analyze → implement
+                                                     ↑
+                                            checklist（可选，任意时机）
+```
+
 ## AI Agent 上下文更新
 
 ### 什么是 Agent 上下文？
