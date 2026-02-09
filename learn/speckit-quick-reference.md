@@ -361,6 +361,22 @@ This iterative refinement process is part of Spec Kit's design, ensuring that fi
 
 ## Constitution and Consistency
 
+### Three-Layer Responsibility Model
+
+Spec Kit separates concerns into three layers:
+
+| Layer            | Role                   | Declares                                                                                                   |
+| ---------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Constitution** | WHAT constraints exist | One-line MUST/SHOULD principles (consumed by `/speckit.plan` and `/speckit.analyze`)                       |
+| **Templates**    | HOW to structure/check | Expand principles into check items and artifact structure (updated by `/speckit.constitution` propagation) |
+| **Skills**       | HOW to implement       | Code-level patterns and examples for AI passive perception (not consumed by speckit commands)              |
+
+- Constitution declares the constraint (e.g., "Tests MUST use real PostgreSQL")
+- Templates define how to structure artifacts and check compliance (e.g., plan-template's Constitution Check, spec-template's Requirements, tasks-template's phases)
+- Skills show concrete code patterns (e.g., `go-testing-patterns` with testcontainers setup)
+
+> **Note**: `/speckit.constitution` propagates changes to plan-template, spec-template, and tasks-template. Checklist-template is NOT part of this propagation — it validates requirement quality independently.
+
 ### Which Commands Read/Update Constitution?
 
 | Command                  | Constitution | Purpose                                                |

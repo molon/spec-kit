@@ -361,6 +361,22 @@ Spec Kit 是一个**规格驱动开发（Spec-Driven Development, SDD）**工具
 
 ## 宪法与一致性
 
+### 三层职责模型
+
+Spec Kit 将关注点分为三层：
+
+| 层级       | 职责              | 说明                                                                             |
+| ---------- | ----------------- | -------------------------------------------------------------------------------- |
+| **宪法**   | 声明约束（WHAT）  | 每条原则一句话 MUST/SHOULD 声明（被 `/speckit.plan` 和 `/speckit.analyze` 消费） |
+| **模板**   | 结构与检查（HOW） | 将原则展开为检查项和工件结构（由 `/speckit.constitution` 传播更新）              |
+| **Skills** | 如何实现（HOW）   | 代码级别的模式和示例，供 AI 被动感知使用（不被 speckit 命令消费）                |
+
+- 宪法声明约束（如 "Tests MUST use real PostgreSQL"）
+- 模板定义工件结构和合规检查（如 plan-template 的 Constitution Check、spec-template 的 Requirements、tasks-template 的阶段划分）
+- Skills 展示具体代码模式（如 `go-testing-patterns` 中的 testcontainers 配置）
+
+> **注意**：`/speckit.constitution` 将变更传播到 plan-template、spec-template 和 tasks-template。Checklist-template **不在**传播范围内 — 它独立验证需求质量。
+
 ### 哪些命令读取/更新宪法？
 
 | 命令                     | 宪法相关 | 用途                          |
