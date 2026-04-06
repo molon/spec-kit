@@ -1,6 +1,6 @@
 # 文档
 
-此文件夹包含使用 [DocFX](https://dotnet.github.io/docfx/) 构建的 Spec Kit 的文档源文件。
+此文件夹包含 Spec Kit 的文档源文件，使用 [DocFX](https://dotnet.github.io/docfx/) 构建。
 
 ## 本地构建
 
@@ -24,7 +24,7 @@
 ## 结构
 
 - `docfx.json` - DocFX 配置文件
-- `index.md` - 主文档主页
+- `index.md` - 文档主页
 - `toc.yml` - 目录配置
 - `installation.md` - 安装指南
 - `quickstart.md` - 快速入门指南
@@ -32,4 +32,4 @@
 
 ## 部署
 
-当更改被推送到 `main` 分支时，文档会自动构建并部署到 GitHub Pages。工作流在 `.github/workflows/docs.yml` 中定义。
+当更改推送到 `main` 分支时，文档会自动构建并部署到 GitHub Pages。工作流定义在 `.github/workflows/docs.yml` 中。

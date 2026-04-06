@@ -10,10 +10,6 @@
 
 ---
 
-## 一般实践
-
-- 对 Specify CLI 的 `__init__.py` 的任何更改都需要在 `pyproject.toml` 中进行版本修订，并在 `CHANGELOG.md` 中添加条目。
-
 ## 添加新代理支持
 
 本部分说明如何向 Specify CLI 添加新 AI 代理/助手的支持。在将新 AI 工具集成到规格驱动开发工作流中时，将本指南用作参考。
@@ -29,25 +25,35 @@ Specify 通过在初始化项目时生成代理特定的命令文件和目录结
 
 ### 当前支持的代理
 
-| 代理 | 目录 | 格式 | CLI 工具 | 描述 |
-| --- | --- | --- | --- | --- |
-| **Claude Code** | `.claude/commands/` | Markdown | `claude` | Anthropic 的 Claude Code CLI |
-| **Gemini CLI** | `.gemini/commands/` | TOML | `gemini` | Google 的 Gemini CLI |
-| **GitHub Copilot** | `.github/agents/` | Markdown | N/A（基于 IDE） | VS Code 中的 GitHub Copilot |
-| **Cursor** | `.cursor/commands/` | Markdown | `cursor-agent` | Cursor CLI |
-| **Qwen Code** | `.qwen/commands/` | TOML | `qwen` | 阿里巴巴的 Qwen Code CLI |
-| **opencode** | `.opencode/command/` | Markdown | `opencode` | opencode CLI |
-| **Codex CLI** | `.codex/commands/` | Markdown | `codex` | Codex CLI |
-| **Windsurf** | `.windsurf/workflows/` | Markdown | N/A（基于 IDE） | Windsurf IDE 工作流 |
-| **Kilo Code** | `.kilocode/rules/` | Markdown | N/A（基于 IDE） | Kilo Code IDE |
-| **Auggie CLI** | `.augment/rules/` | Markdown | `auggie` | Auggie CLI |
-| **Roo Code** | `.roo/rules/` | Markdown | N/A（基于 IDE） | Roo Code IDE |
-| **CodeBuddy CLI** | `.codebuddy/commands/` | Markdown | `codebuddy` | CodeBuddy CLI |
-| **Qoder CLI** | `.qoder/commands/` | Markdown | `qoder` | Qoder CLI |
-| **Amazon Q Developer CLI** | `.amazonq/prompts/` | Markdown | `q` | Amazon Q Developer CLI |
-| **Amp** | `.agents/commands/` | Markdown | `amp` | Amp CLI |
-| **SHAI** | `.shai/commands/` | Markdown | `shai` | SHAI CLI |
-| **IBM Bob** | `.bob/commands/` | Markdown | N/A（基于 IDE） | IBM Bob IDE |
+| 代理                      | 目录              | 格式   | CLI 工具        | 描述                 |
+| -------------------------- | ---------------------- | -------- | --------------- | --------------------------- |
+| **Claude Code**            | `.claude/commands/`    | Markdown | `claude`        | Anthropic 的 Claude Code CLI |
+| **Gemini CLI**             | `.gemini/commands/`    | TOML     | `gemini`        | Google 的 Gemini CLI         |
+| **GitHub Copilot**         | `.github/agents/`      | Markdown | N/A（基于 IDE） | VS Code 中的 GitHub Copilot   |
+| **Cursor**                 | `.cursor/commands/`    | Markdown | N/A（基于 IDE） | Cursor IDE（`--ai cursor-agent`） |
+| **Qwen Code**              | `.qwen/commands/`      | Markdown | `qwen`          | 阿里巴巴的 Qwen Code CLI     |
+| **opencode**               | `.opencode/command/`   | Markdown | `opencode`      | opencode CLI                |
+| **Codex CLI**              | `.agents/skills/`      | Markdown | `codex`         | Codex CLI（`--ai codex --ai-skills`） |
+| **Windsurf**               | `.windsurf/workflows/` | Markdown | N/A（基于 IDE） | Windsurf IDE 工作流      |
+| **Junie**                  | `.junie/commands/`     | Markdown | `junie`         | JetBrains 的 Junie          |
+| **Kilo Code**              | `.kilocode/workflows/` | Markdown | N/A（基于 IDE） | Kilo Code IDE               |
+| **Auggie CLI**             | `.augment/commands/`   | Markdown | `auggie`        | Auggie CLI                  |
+| **Roo Code**               | `.roo/commands/`       | Markdown | N/A（基于 IDE） | Roo Code IDE                |
+| **CodeBuddy CLI**          | `.codebuddy/commands/` | Markdown | `codebuddy`     | CodeBuddy CLI               |
+| **Qoder CLI**              | `.qoder/commands/`     | Markdown | `qodercli`      | Qoder CLI                   |
+| **Kiro CLI**               | `.kiro/prompts/`       | Markdown | `kiro-cli`      | Kiro CLI                    |
+| **Amp**                    | `.agents/commands/`    | Markdown | `amp`           | Amp CLI                     |
+| **SHAI**                   | `.shai/commands/`      | Markdown | `shai`          | SHAI CLI                    |
+| **Tabnine CLI**            | `.tabnine/agent/commands/` | TOML | `tabnine`       | Tabnine CLI                 |
+| **Kimi Code**              | `.kimi/skills/`        | Markdown | `kimi`          | Kimi Code CLI（Moonshot AI） |
+| **Pi Coding Agent**        | `.pi/prompts/`         | Markdown | `pi`            | Pi 终端编码代理    |
+| **iFlow CLI**              | `.iflow/commands/`     | Markdown | `iflow`         | iFlow CLI (iflow-ai)        |
+| **Forge**                  | `.forge/commands/`     | Markdown | `forge`         | Forge CLI (forgecode.dev)   |
+| **IBM Bob**                | `.bob/commands/`       | Markdown | N/A（基于 IDE） | IBM Bob IDE                 |
+| **Trae**                   | `.trae/rules/`         | Markdown | N/A（基于 IDE） | Trae IDE                    |
+| **Antigravity**            | `.agent/commands/`     | Markdown | N/A（基于 IDE） | Antigravity IDE（`--ai agy --ai-skills`） |
+| **Mistral Vibe**           | `.vibe/prompts/`       | Markdown | `vibe`          | Mistral Vibe CLI            |
+| **Generic**                | 用户通过 `--ai-commands-dir` 指定 | Markdown | N/A | 自带代理        |
 
 ### 分步集成指南
 
@@ -65,6 +71,7 @@ AGENT_CONFIG = {
     "new-agent-cli": {  # Use the ACTUAL CLI tool name (what users type in terminal)
         "name": "New Agent Display Name",
         "folder": ".newagent/",  # Directory for agent files
+        "commands_subdir": "commands",  # Subdirectory name for command files (default: "commands")
         "install_url": "https://example.com/install",  # URL for installation docs (or None if IDE-based)
         "requires_cli": True,  # True if CLI tool required, False for IDE-based agents
     },
@@ -82,6 +89,10 @@ AGENT_CONFIG = {
 
 - `name`：显示给用户的人类可读的显示名称
 - `folder`：存储代理特定文件的目录（相对于项目根目录）
+- `commands_subdir`：代理文件夹内存放命令/提示文件的子目录名称（默认：`"commands"`）
+  - 大多数代理使用 `"commands"`（例如 `.claude/commands/`）
+  - 一些代理使用替代名称：`"agents"`（copilot）、`"workflows"`（windsurf、kilocode）、`"prompts"`（codex、kiro-cli、pi）、`"command"`（opencode - 单数）
+  - 此字段使 `--ai-skills` 能正确定位命令模板以进行技能生成
 - `install_url`：安装文档 URL（对于基于 IDE 的代理，设置为 `None`）
 - `requires_cli`：代理在初始化期间是否需要 CLI 工具检查
 
@@ -90,7 +101,7 @@ AGENT_CONFIG = {
 更新 `init()` 命令中的 `--ai` 参数帮助文本以包括新代理：
 
 ```python
-ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, new-agent-cli, or q"),
+ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, new-agent-cli, or kiro-cli"),
 ```
 
 还要更新任何函数文档字符串、示例和列出可用代理的错误消息。
@@ -111,7 +122,7 @@ ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude
 ##### 添加到 ALL_AGENTS 数组
 
 ```bash
-ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf q)
+ALL_AGENTS=(claude gemini copilot cursor-agent qwen opencode windsurf kiro-cli)
 ```
 
 ##### 为目录结构添加 case 语句
@@ -123,6 +134,18 @@ case $agent in
     mkdir -p "$base_dir/.windsurf/workflows"
     generate_commands windsurf md "\$ARGUMENTS" "$base_dir/.windsurf/workflows" "$script" ;;
 esac
+```
+
+#### 4. 更新 GitHub 发布脚本
+
+修改 `.github/workflows/scripts/create-github-release.sh` 以包含新代理的包：
+
+```bash
+gh release create "$VERSION" \
+  # ... existing packages ...
+  .genreleases/spec-kit-template-windsurf-sh-"$VERSION".zip \
+  .genreleases/spec-kit-template-windsurf-ps-"$VERSION".zip \
+  # Add new agent packages here
 ```
 
 #### 5. 更新代理上下文脚本
@@ -296,28 +319,41 @@ echo "✅ Done"
 
 - **Claude Code**：`claude` CLI
 - **Gemini CLI**：`gemini` CLI
-- **Cursor**：`cursor-agent` CLI
 - **Qwen Code**：`qwen` CLI
 - **opencode**：`opencode` CLI
-- **Amazon Q Developer CLI**：`q` CLI
+- **Codex CLI**：`codex` CLI（需要 `--ai-skills`）
+- **Junie**：`junie` CLI
+- **Auggie CLI**：`auggie` CLI
 - **CodeBuddy CLI**：`codebuddy` CLI
-- **Qoder CLI**：`qoder` CLI
+- **Qoder CLI**：`qodercli` CLI
+- **Kiro CLI**：`kiro-cli` CLI
 - **Amp**：`amp` CLI
 - **SHAI**：`shai` CLI
+- **Tabnine CLI**：`tabnine` CLI
+- **Kimi Code**：`kimi` CLI
+- **Mistral Vibe**：`vibe` CLI
+- **Pi Coding Agent**：`pi` CLI
+- **iFlow CLI**：`iflow` CLI
+- **Forge**：`forge` CLI
 
 ### 基于 IDE 的代理
 
 在集成开发环境中工作：
 
 - **GitHub Copilot**：内置于 VS Code/兼容编辑器
+- **Cursor**：内置于 Cursor IDE（`--ai cursor-agent`）
 - **Windsurf**：内置于 Windsurf IDE
+- **Kilo Code**：内置于 Kilo Code IDE
+- **Roo Code**：内置于 Roo Code IDE
 - **IBM Bob**：内置于 IBM Bob IDE
+- **Trae**：内置于 Trae IDE
+- **Antigravity**：内置于 Antigravity IDE（`--ai agy --ai-skills`）
 
 ## 命令文件格式
 
 ### Markdown 格式
 
-使用者：Claude、Cursor、opencode、Windsurf、Amazon Q Developer、Amp、SHAI、IBM Bob
+使用者：Claude、Cursor、GitHub Copilot、opencode、Windsurf、Junie、Kiro CLI、Amp、SHAI、IBM Bob、Kimi Code、Qwen、Pi、Codex、Auggie、CodeBuddy、Qoder、Roo Code、Kilo Code、Trae、Antigravity、Mistral Vibe、iFlow、Forge
 
 **标准格式：**
 
@@ -342,7 +378,7 @@ Command content with {SCRIPT} and $ARGUMENTS placeholders.
 
 ### TOML 格式
 
-使用者：Gemini、Qwen
+使用者：Gemini、Tabnine
 
 ```toml
 description = "Command description"
@@ -355,10 +391,29 @@ Command content with {SCRIPT} and {{args}} placeholders.
 ## 目录约定
 
 - **CLI 代理**：通常 `.<agent-name>/commands/`
+- **单数 command 例外**：
+  - opencode：`.opencode/command/`（单数 `command`，而非 `commands`）
+- **嵌套路径例外**：
+  - Tabnine：`.tabnine/agent/commands/`（额外的 `agent/` 路径段）
+- **共享 `.agents/` 文件夹**：
+  - Amp：`.agents/commands/`（共享文件夹，非 `.amp/`）
+  - Codex：`.agents/skills/`（共享文件夹；需要 `--ai-skills`；以 `$speckit-<command>` 调用）
+- **基于技能的例外**：
+  - Kimi Code：`.kimi/skills/`（技能，以 `/skill:speckit-<command>` 调用）
+- **基于提示的例外**：
+  - Kiro CLI：`.kiro/prompts/`
+  - Pi：`.pi/prompts/`
+  - Mistral Vibe：`.vibe/prompts/`
+- **基于规则的例外**：
+  - Trae：`.trae/rules/`
 - **IDE 代理**：遵循 IDE 特定的模式：
   - Copilot：`.github/agents/`
   - Cursor：`.cursor/commands/`
   - Windsurf：`.windsurf/workflows/`
+  - Kilo Code：`.kilocode/workflows/`
+  - Roo Code：`.roo/commands/`
+  - IBM Bob：`.bob/commands/`
+  - Antigravity：`.agent/skills/`（需要 `--ai-skills`；`.agent/commands/` 已弃用）
 
 ## 参数模式
 
@@ -366,8 +421,48 @@ Command content with {SCRIPT} and {{args}} placeholders.
 
 - **Markdown/提示基础**：`$ARGUMENTS`
 - **基于 TOML**：`{{args}}`
+- **Forge 特定**：`{{parameters}}`（使用自定义参数语法）
 - **脚本占位符**：`{SCRIPT}`（替换为实际脚本路径）
 - **代理占位符**：`__AGENT__`（替换为代理名称）
+
+## 特殊处理要求
+
+一些代理需要超出标准模板转换的自定义处理：
+
+### Copilot 集成
+
+GitHub Copilot 有独特的要求：
+- 命令使用 `.agent.md` 扩展名（非 `.md`）
+- 每个命令在 `.github/prompts/` 中获得一个配套的 `.prompt.md` 文件
+- 安装 `.vscode/settings.json` 和提示文件推荐
+- 上下文文件位于 `.github/copilot-instructions.md`
+
+实现：使用自定义 `setup()` 方法扩展 `IntegrationBase`：
+1. 使用 `process_template()` 处理模板
+2. 生成配套的 `.prompt.md` 文件
+3. 合并 VS Code 设置
+
+### Forge 集成
+
+Forge 有特殊的 frontmatter 和参数要求：
+- 使用 `{{parameters}}` 而非 `$ARGUMENTS`
+- 移除 `handoffs` frontmatter 键（Forge 特定的协作功能）
+- 在缺少时将 `name` 字段注入到 frontmatter 中
+
+实现：使用自定义 `setup()` 方法扩展 `MarkdownIntegration`：
+1. 从 `MarkdownIntegration` 继承标准模板处理
+2. 在模板处理后添加额外的 `$ARGUMENTS` → `{{parameters}}` 替换
+3. 通过 `_apply_forge_transformations()` 应用 Forge 特定的转换
+4. 移除 `handoffs` frontmatter 键
+5. 注入缺少的 `name` 字段
+6. 确保共享的 `update-agent-context.*` 脚本包含 `forge` case，将上下文更新映射到 `AGENTS.md`（类似于 `opencode`/`codex`/`pi`）并在其使用/帮助文本中列出 `forge`
+
+### 标准 Markdown 代理
+
+大多数代理（Bob、Claude、Windsurf 等）使用 `MarkdownIntegration`：
+- 简单的子类，仅设置 `key`、`config`、`registrar_config`
+- 从 `MarkdownIntegration.setup()` 继承标准处理
+- 不需要自定义处理
 
 ## 测试新代理集成
 

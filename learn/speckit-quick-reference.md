@@ -492,6 +492,59 @@ Note: The following commands do NOT directly read constitution:
 - /speckit.taskstoissues
 ```
 
+## Template & Command Override System
+
+### Four-Layer Priority Resolution
+
+Spec Kit resolves templates and commands using the following priority order (highest to lowest; first match wins):
+
+```
+Priority (highest to lowest):
+
+1. .specify/templates/overrides/           ← Project-local overrides (highest priority)
+2. .specify/presets/<preset-id>/           ← Installed presets
+3. .specify/extensions/<ext-id>/templates/ ← Extension-provided templates
+4. .specify/templates/                     ← Core templates (Spec Kit defaults)
+```
+
+### Override Scope
+
+**Both templates and commands support overrides**, all placed under `.specify/templates/overrides/`:
+
+| Type | Override Path | Example |
+|------|--------------|---------|
+| Template files | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
+| Command files | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
+| Script files | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
+
+### Partial Overrides
+
+**You can override only some templates** — no need to override all of them. The resolver uses first-match logic: files present in the overrides directory use the override version; files not present fall through to the next layer. For example, creating just two files overrides only those two templates:
+
+```
+.specify/templates/overrides/
+  spec-template.md      ← only these two are overridden
+  plan-template.md      ← remaining 4 still use default versions
+```
+
+### Verify Override
+
+```bash
+# Check which file a template actually resolves to (name without file extension)
+specify preset resolve spec-template
+specify preset resolve speckit.specify
+```
+
+> **Note**: `resolve` accepts names **without file extensions** (do not append `.md`). Adding a suffix will result in no match.
+
+### Relationship with Presets
+
+- **overrides/**: One-off customization for a single project; highest priority
+- **Preset**: Packaged set of overrides for cross-project reuse; installed via `specify preset add`
+- Both can coexist; overrides always take precedence over presets
+
+---
+
 ## Directory Structure
 
 ```

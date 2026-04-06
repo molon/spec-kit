@@ -492,6 +492,59 @@ constitution.md（真实来源）
 - /speckit.taskstoissues
 ```
 
+## 模板与命令覆盖系统
+
+### 四层优先级解析
+
+Spec Kit 在解析模板和命令时遵循以下优先级（从高到低，先找到先用）：
+
+```
+优先级（从高到低）：
+
+1. .specify/templates/overrides/           ← 项目本地覆盖（最高优先级）
+2. .specify/presets/<preset-id>/           ← 已安装的 Preset
+3. .specify/extensions/<ext-id>/templates/ ← Extension 提供的模板
+4. .specify/templates/                     ← 核心模板（Spec Kit 默认）
+```
+
+### 覆盖范围
+
+**templates 和 commands 都支持覆盖**，统一放在 `.specify/templates/overrides/` 目录下：
+
+| 类型 | 覆盖路径 | 示例 |
+|------|---------|------|
+| 模板文件 | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
+| 命令文件 | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
+| 脚本文件 | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
+
+### 部分覆盖
+
+**可以只覆盖部分模板**，不需要覆盖全部。resolver 是 first-match 逻辑：覆盖目录里有的文件使用覆盖版本，没有的文件继续向下一层找默认版本。例如只创建两个文件即可只覆盖两个模板：
+
+```
+.specify/templates/overrides/
+  spec-template.md      ← 只覆盖这两个
+  plan-template.md      ← 其余 4 个仍使用默认版本
+```
+
+### 验证生效
+
+```bash
+# 检查某个模板实际使用哪个文件（名称不带文件后缀）
+specify preset resolve spec-template
+specify preset resolve speckit.specify
+```
+
+> **注意**：`resolve` 命令接受的是**不带文件后缀**的名称（不要加 `.md`），带后缀会导致找不到结果。
+
+### 与 Preset 的关系
+
+- **overrides/**：单个项目的一次性自定义，优先级最高
+- **Preset**：打包好的覆盖集合，可跨项目复用，通过 `specify preset add` 安装
+- 两者可以同时使用，overrides 始终覆盖 Preset
+
+---
+
 ## 目录结构
 
 ```

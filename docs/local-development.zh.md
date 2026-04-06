@@ -1,8 +1,8 @@
 # 本地开发指南
 
-本指南展示了如何在本地迭代 `specify` CLI，而无需发布发布或首先提交到 `main`。
+本指南介绍如何在本地迭代 `specify` CLI，而无需先发布版本或提交到 `main`。
 
-> 脚本现在有 Bash（`.sh`）和 PowerShell（`.ps1`）变体。CLI 根据操作系统自动选择，除非你传递 `--script sh|ps`。
+> 脚本现在同时提供 Bash（`.sh`）和 PowerShell（`.ps1`）两种变体。CLI 会根据操作系统自动选择，除非你传递 `--script sh|ps`。
 
 ## 1. 克隆并切换分支
 
@@ -15,7 +15,7 @@ git checkout -b your-feature-branch
 
 ## 2. 直接运行 CLI（最快反馈）
 
-你可以通过模块入口点执行 CLI，而无需安装任何内容：
+你可以通过模块入口点执行 CLI，无需安装任何东西：
 
 ```bash
 # 从仓库根目录
@@ -23,7 +23,7 @@ python -m src.specify_cli --help
 python -m src.specify_cli init demo-project --ai claude --ignore-agent-tools --script sh
 ```
 
-如果你更喜欢调用脚本文件风格（使用 shebang）：
+如果你更喜欢脚本文件调用方式（使用 shebang）：
 
 ```bash
 python src/specify_cli/__init__.py init demo-project --script ps
@@ -31,31 +31,31 @@ python src/specify_cli/__init__.py init demo-project --script ps
 
 ## 3. 使用可编辑安装（隔离环境）
 
-使用 `uv` 创建隔离环境，以便依赖项的解析方式与最终用户完全相同：
+使用 `uv` 创建隔离环境，使依赖解析与最终用户完全一致：
 
 ```bash
 # 创建并激活虚拟环境（uv 自动管理 .venv）
 uv venv
 source .venv/bin/activate  # 或在 Windows PowerShell 上：.venv\Scripts\Activate.ps1
 
-# 在可编辑模式下安装项目
+# 以可编辑模式安装项目
 uv pip install -e .
 
 # 现在 'specify' 入口点可用
 specify --help
 ```
 
-由于可编辑模式，代码编辑后重新运行不需要重新安装。
+由于使用了可编辑模式，代码修改后重新运行无需重新安装。
 
 ## 4. 直接从 Git 使用 uvx 调用（当前分支）
 
-`uvx` 可以从本地路径（或 Git ref）运行以模拟用户流：
+`uvx` 可以从本地路径（或 Git ref）运行，以模拟用户流程：
 
 ```bash
 uvx --from . specify init demo-uvx --ai copilot --ignore-agent-tools --script sh
 ```
 
-你也可以指向 uvx 到特定分支而无需合并：
+你也可以将 uvx 指向特定分支而无需合并：
 
 ```bash
 # 首先推送你的工作分支
@@ -63,9 +63,9 @@ git push origin your-feature-branch
 uvx --from git+https://github.com/github/spec-kit.git@your-feature-branch specify init demo-branch-test --script ps
 ```
 
-### 4a. 绝对路径 uvx（从任何地方运行）
+### 4a. 绝对路径 uvx（从任意位置运行）
 
-如果你在另一个目录中，使用绝对路径而不是 `.`：
+如果你在其他目录中，使用绝对路径代替 `.`：
 
 ```bash
 uvx --from /mnt/c/GitHub/spec-kit specify --help
@@ -93,20 +93,20 @@ specify-dev --help
 
 ```bash
 ls -l scripts | grep .sh
-# 期望所有者执行位（例如 -rwxr-xr-x）
+# 期望有所有者执行位（例如 -rwxr-xr-x）
 ```
 
-在 Windows 上，你将改为使用 `.ps1` 脚本（不需要 chmod）。
+在 Windows 上则使用 `.ps1` 脚本（无需 chmod）。
 
-## 6. 运行 Lint / 基本检查（添加你自己的）
+## 6. 运行 Lint / 基本检查（可自行添加）
 
-目前没有强制的 lint 配置，但你可以快速进行理智检查导入性：
+目前没有内置强制的 lint 配置，但你可以快速检查模块是否可导入：
 
 ```bash
 python -c "import specify_cli; print('Import OK')"
 ```
 
-## 7. 在本地构建轮子（可选）
+## 7. 本地构建 Wheel（可选）
 
 在发布前验证打包：
 
@@ -115,7 +115,7 @@ uv build
 ls dist/
 ```
 
-如果需要，将构建的工件安装到新的临时环境中。
+如有需要，可将构建产物安装到全新的临时环境中。
 
 ## 8. 使用临时工作区
 
@@ -123,10 +123,10 @@ ls dist/
 
 ```bash
 mkdir /tmp/spec-test && cd /tmp/spec-test
-python -m src.specify_cli init --here --ai claude --ignore-agent-tools --script sh  # 如果仓库复制到这里
+python -m src.specify_cli init --here --ai claude --ignore-agent-tools --script sh  # 如果仓库已复制到此处
 ```
 
-或仅复制修改的 CLI 部分，如果你想要更轻的沙箱。
+或者仅复制修改过的 CLI 部分，以获得更轻量的沙箱环境。
 
 ## 9. 调试网络 / TLS 跳过
 
@@ -139,7 +139,7 @@ specify init demo --skip-tls --ai gemini --ignore-agent-tools --script ps
 
 （仅用于本地实验。）
 
-## 10. 快速编辑循环摘要
+## 10. 快速编辑循环总结
 
 | 操作 | 命令 |
 |--------|---------|
@@ -148,11 +148,11 @@ specify init demo --skip-tls --ai gemini --ignore-agent-tools --script ps
 | 本地 uvx 运行（仓库根目录） | `uvx --from . specify ...` |
 | 本地 uvx 运行（绝对路径） | `uvx --from /mnt/c/GitHub/spec-kit specify ...` |
 | Git 分支 uvx | `uvx --from git+URL@branch specify ...` |
-| 构建轮子 | `uv build` |
+| 构建 Wheel | `uv build` |
 
 ## 11. 清理
 
-快速删除构建工件 / 虚拟环境：
+快速删除构建产物 / 虚拟环境：
 
 ```bash
 rm -rf .venv dist build *.egg-info
@@ -160,16 +160,16 @@ rm -rf .venv dist build *.egg-info
 
 ## 12. 常见问题
 
-| 症状 | 修复 |
+| 症状 | 修复方法 |
 |---------|-----|
 | `ModuleNotFoundError: typer` | 运行 `uv pip install -e .` |
 | 脚本不可执行（Linux） | 重新运行 init 或 `chmod +x scripts/*.sh` |
-| Git 步骤被跳过 | 你传递了 `--no-git` 或 Git 未安装 |
-| 下载了错误的脚本类型 | 明确传递 `--script sh` 或 `--script ps` |
-| 企业网络上的 TLS 错误 | 尝试 `--skip-tls`（不用于生产） |
+| Git 步骤被跳过 | 你传递了 `--no-git` 或未安装 Git |
+| 下载了错误的脚本类型 | 显式传递 `--script sh` 或 `--script ps` |
+| 企业网络上的 TLS 错误 | 尝试 `--skip-tls`（不用于生产环境） |
 
 ## 13. 后续步骤
 
-- 使用你修改的 CLI 更新文档并运行快速启动
-- 满意时打开 PR
-- （可选）一旦更改登陆 `main` 时标记发布
+- 使用你修改后的 CLI 更新文档并完成快速入门流程
+- 满意后打开 PR
+- （可选）更改合并到 `main` 后标记发布版本

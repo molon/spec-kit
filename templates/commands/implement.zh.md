@@ -13,6 +13,40 @@ $ARGUMENTS
 
 在继续之前，你**必须**考虑用户输入（如果不为空）。
 
+## 执行前检查
+
+**检查扩展钩子（实现之前）**：
+- 检查项目根目录中是否存在 `.specify/extensions.yml`。
+- 如果存在，读取并查找 `hooks.before_implement` 键下的条目
+- 如果 YAML 无法解析或无效，静默跳过钩子检查并正常继续
+- 过滤掉 `enabled` 明确设置为 `false` 的钩子。将没有 `enabled` 字段的钩子视为默认启用。
+- 对于每个剩余的钩子，**不要**尝试解释或评估钩子的 `condition` 表达式：
+  - 如果钩子没有 `condition` 字段，或为 null/空，则视为可执行
+  - 如果钩子定义了非空的 `condition`，跳过该钩子并将条件评估留给 HookExecutor 实现
+- 对于每个可执行的钩子，根据其 `optional` 标志输出以下内容：
+  - **可选钩子** (`optional: true`)：
+    ```
+    ## Extension Hooks
+
+    **Optional Pre-Hook**: {extension}
+    Command: `/{command}`
+    Description: {description}
+
+    Prompt: {prompt}
+    To execute: `/{command}`
+    ```
+  - **强制钩子** (`optional: false`)：
+    ```
+    ## Extension Hooks
+
+    **Automatic Pre-Hook**: {extension}
+    Executing: `/{command}`
+    EXECUTE_COMMAND: {command}
+    
+    Wait for the result of the hook command before proceeding to the Outline.
+    ```
+- 如果没有注册钩子或 `.specify/extensions.yml` 不存在，静默跳过
+
 ## 概述
 
 1. 从仓库根目录运行 `{SCRIPT}` 并解析 FEATURE_DIR 和 AVAILABLE_DOCS 列表。所有路径必须是绝对的。对于像"I'm Groot"这样的单引号参数，使用转义语法：例如 'I'\''m Groot'（或如果可能的话使用双引号："I'm Groot"）。
@@ -88,7 +122,7 @@ $ARGUMENTS
    - **Rust**：`target/`、`debug/`、`release/`、`*.rs.bk`、`*.rlib`、`*.prof*`、`.idea/`、`*.log`、`.env*`
    - **Kotlin**：`build/`、`out/`、`.gradle/`、`.idea/`、`*.class`、`*.jar`、`*.iml`、`*.log`、`.env*`
    - **C++**：`build/`、`bin/`、`obj/`、`out/`、`*.o`、`*.so`、`*.a`、`*.exe`、`*.dll`、`.idea/`、`*.log`、`.env*`
-   - **C**：`build/`、`bin/`、`obj/`、`out/`、`*.o`、`*.a`、`*.so`、`*.exe`、`Makefile`、`config.log`、`.idea/`、`*.log`、`.env*`
+   - **C**：`build/`、`bin/`、`obj/`、`out/`、`*.o`、`*.a`、`*.so`、`*.exe`、`*.dll`、`autom4te.cache/`、`config.status`、`config.log`、`.idea/`、`*.log`、`.env*`
    - **Swift**：`.build/`、`DerivedData/`、`*.swiftpm/`、`Packages/`
    - **R**：`.Rproj.user/`、`.Rhistory`、`.RData`、`.Ruserdata`、`*.Rproj`、`packrat/`、`renv/`
    - **通用**：`.DS_Store`、`Thumbs.db`、`*.tmp`、`*.swp`、`.vscode/`、`.idea/`
@@ -126,7 +160,7 @@ $ARGUMENTS
    - 对于并行任务 [P]，继续成功的任务，报告失败的任务
    - 为调试提供清晰的错误消息和上下文
    - 如果实现无法继续，建议后续步骤
-   - **重要**对于完成的任务，确保在任务文件中标记任务为 [X]。
+   - **重要**：对于完成的任务，确保在任务文件中标记任务为 [X]。
 
 9. 完成验证：
    - 验证所有必需的任务都已完成
@@ -136,3 +170,32 @@ $ARGUMENTS
    - 报告最终状态，包括完成工作的摘要
 
 注意：此命令假设 tasks.md 中存在完整的任务分解。如果任务不完整或缺失，建议首先运行 `/speckit.tasks` 以重新生成任务列表。
+
+10. **检查扩展钩子**：在完成验证之后，检查项目根目录中是否存在 `.specify/extensions.yml`。
+    - 如果存在，读取并查找 `hooks.after_implement` 键下的条目
+    - 如果 YAML 无法解析或无效，静默跳过钩子检查并正常继续
+    - 过滤掉 `enabled` 明确设置为 `false` 的钩子。将没有 `enabled` 字段的钩子视为默认启用。
+    - 对于每个剩余的钩子，**不要**尝试解释或评估钩子的 `condition` 表达式：
+      - 如果钩子没有 `condition` 字段，或为 null/空，则视为可执行
+      - 如果钩子定义了非空的 `condition`，跳过该钩子并将条件评估留给 HookExecutor 实现
+    - 对于每个可执行的钩子，根据其 `optional` 标志输出以下内容：
+      - **可选钩子** (`optional: true`)：
+        ```
+        ## Extension Hooks
+
+        **Optional Hook**: {extension}
+        Command: `/{command}`
+        Description: {description}
+
+        Prompt: {prompt}
+        To execute: `/{command}`
+        ```
+      - **强制钩子** (`optional: false`)：
+        ```
+        ## Extension Hooks
+
+        **Automatic Hook**: {extension}
+        Executing: `/{command}`
+        EXECUTE_COMMAND: {command}
+        ```
+    - 如果没有注册钩子或 `.specify/extensions.yml` 不存在，静默跳过
