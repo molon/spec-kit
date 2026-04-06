@@ -492,59 +492,6 @@ constitution.md（真实来源）
 - /speckit.taskstoissues
 ```
 
-## 模板与命令覆盖系统
-
-### 四层优先级解析
-
-Spec Kit 在解析模板和命令时遵循以下优先级（从高到低，先找到先用）：
-
-```
-优先级（从高到低）：
-
-1. .specify/templates/overrides/           ← 项目本地覆盖（最高优先级）
-2. .specify/presets/<preset-id>/           ← 已安装的 Preset
-3. .specify/extensions/<ext-id>/templates/ ← Extension 提供的模板
-4. .specify/templates/                     ← 核心模板（Spec Kit 默认）
-```
-
-### 覆盖范围
-
-**templates 和 commands 都支持覆盖**，统一放在 `.specify/templates/overrides/` 目录下：
-
-| 类型 | 覆盖路径 | 示例 |
-|------|---------|------|
-| 模板文件 | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
-| 命令文件 | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
-| 脚本文件 | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
-
-### 部分覆盖
-
-**可以只覆盖部分模板**，不需要覆盖全部。resolver 是 first-match 逻辑：覆盖目录里有的文件使用覆盖版本，没有的文件继续向下一层找默认版本。例如只创建两个文件即可只覆盖两个模板：
-
-```
-.specify/templates/overrides/
-  spec-template.md      ← 只覆盖这两个
-  plan-template.md      ← 其余 4 个仍使用默认版本
-```
-
-### 验证生效
-
-```bash
-# 检查某个模板实际使用哪个文件（名称不带文件后缀）
-specify preset resolve spec-template
-specify preset resolve speckit.specify
-```
-
-> **注意**：`resolve` 命令接受的是**不带文件后缀**的名称（不要加 `.md`），带后缀会导致找不到结果。
-
-### 与 Preset 的关系
-
-- **overrides/**：单个项目的一次性自定义，优先级最高
-- **Preset**：打包好的覆盖集合，可跨项目复用，通过 `specify preset add` 安装
-- 两者可以同时使用，overrides 始终覆盖 Preset
-
----
-
 ## 目录结构
 
 ```
@@ -565,19 +512,27 @@ project/
 │       ├── plan-template.md         # 实现计划模板
 │       ├── spec-template.md         # 功能规格模板
 │       └── tasks-template.md        # 任务列表模板
-├── .windsurf/                       # Windsurf IDE 集成（其他 AI 工具有对应目录）
-│   ├── rules/                       # Windsurf 规则
-│   │   └── specify-rules.md         # AI Agent 规则（update-agent-context.sh 生成/更新）
-│   └── workflows/                   # Windsurf 工作流（命令定义）
-│       ├── speckit.analyze.md       # 一致性分析命令
-│       ├── speckit.checklist.md     # 检查清单命令
-│       ├── speckit.clarify.md       # 澄清规格命令
-│       ├── speckit.constitution.md  # 宪法管理命令
-│       ├── speckit.implement.md     # 实现执行命令
-│       ├── speckit.plan.md          # 实现计划命令
-│       ├── speckit.specify.md       # 规格定义命令
-│       ├── speckit.tasks.md         # 任务生成命令
-│       └── speckit.taskstoissues.md # 任务转 Issues 命令
+├── CLAUDE.md                        # Claude Code 上下文规则（update-agent-context.sh 生成/更新）
+├── .claude/                         # Claude Code 集成（其他 AI 工具有对应目录）
+│   └── skills/                      # Claude Skills（命令定义）
+│       ├── speckit-analyze/
+│       │   └── SKILL.md             # 一致性分析命令
+│       ├── speckit-checklist/
+│       │   └── SKILL.md             # 检查清单命令
+│       ├── speckit-clarify/
+│       │   └── SKILL.md             # 澄清规格命令
+│       ├── speckit-constitution/
+│       │   └── SKILL.md             # 宪法管理命令
+│       ├── speckit-implement/
+│       │   └── SKILL.md             # 实现执行命令
+│       ├── speckit-plan/
+│       │   └── SKILL.md             # 实现计划命令
+│       ├── speckit-specify/
+│       │   └── SKILL.md             # 规格定义命令
+│       ├── speckit-tasks/
+│       │   └── SKILL.md             # 任务生成命令
+│       └── speckit-taskstoissues/
+│           └── SKILL.md             # 任务转 Issues 命令
 └── specs/                           # 功能规格目录（运行时生成）
     └── 001-feature-name/            # 功能目录（由 /speckit.specify 创建）
         ├── spec.md                  # 功能规格说明（/speckit.specify 生成）
@@ -700,7 +655,7 @@ project/
 │      │                                                                 │ │
 │      ├─→ research.md (Phase 0)                                         │ │
 │      ├─→ data-model.md, contracts/, quickstart.md (Phase 1)            │ │
-│      └─→ 自动触发 update-agent-context.sh → specify-rules.md           │ │
+│      └─→ 自动触发 update-agent-context.sh → CLAUDE.md                  │ │
 │      │                                                                 │ │
 │      ▼                                                                 │ │
 │  /speckit.tasks ◀── 读取: plan.md, spec.md, [data-model, contracts...] │ │
@@ -753,7 +708,7 @@ Spec Kit 支持多种 AI 编程助手（Claude、Windsurf、Cursor、Copilot 等
 | 文件                      | 位置                     | 说明                     |
 | ------------------------- | ------------------------ | ------------------------ |
 | `agent-file-template.md`  | `.specify/templates/`    | AI Agent 规则文件的模板  |
-| `specify-rules.md`        | `.windsurf/rules/` 等    | 生成的 AI Agent 规则文件 |
+| `CLAUDE.md`               | 项目根目录               | 生成的 AI Agent 上下文文件（Claude Code） |
 | `update-agent-context.sh` | `.specify/scripts/bash/` | 更新脚本                 |
 
 ### 工作流程
@@ -766,10 +721,10 @@ update-agent-context.sh（解析 plan.md）
     │
     ├─→ 读取 agent-file-template.md（模板）
     │
-    └─→ 生成/更新各 AI 工具的规则文件
-        ├─→ .windsurf/rules/specify-rules.md
-        ├─→ .cursor/rules/specify-rules.mdc
-        ├─→ CLAUDE.md
+    └─→ 生成/更新各 AI 工具的上下文文件
+        ├─→ CLAUDE.md（Claude Code）
+        ├─→ .cursor/rules/specify-rules.mdc（Cursor）
+        ├─→ .windsurf/rules/specify-rules.md（Windsurf）
         └─→ 其他 AI 工具对应文件...
 ```
 
@@ -791,8 +746,8 @@ agent_scripts:
 ./.specify/scripts/bash/update-agent-context.sh
 
 # 只更新特定 AI 工具的规则文件
-./.specify/scripts/bash/update-agent-context.sh windsurf
 ./.specify/scripts/bash/update-agent-context.sh claude
+./.specify/scripts/bash/update-agent-context.sh windsurf
 ```
 
 ### 手动运行场景
@@ -884,3 +839,229 @@ agent_scripts:
 1. **手动验证是必需的**：宪法更新后需要手动运行 `/speckit.analyze`
 2. **现有工件需要手动更新**：宪法更新后需要手动重新生成受影响的工件
 3. **宪法冲突是 CRITICAL**：`/speckit.analyze` 会将宪法冲突标记为 CRITICAL 级别
+
+---
+
+## Extension 扩展系统
+
+Extension 是 Spec Kit 的**用户层模块化扩展机制**，用于集成外部工具（Jira、Linear 等）或添加自定义工作流，而不修改核心 spec-kit 本身。
+
+### 核心概念
+
+- Extension 安装后存放于 `.specify/extensions/<ext-id>/`
+- 每个 Extension 有一个 `extension.yml` 声明式清单
+- Extension 可以**新增命令**（安装到 AI Agent 的命令目录）
+- Extension 可以**注册 Hook**（在核心命令完成后自动触发）
+- Extension 可以**提供模板**（参与四层优先级解析）
+
+### extension.yml 清单结构
+
+```yaml
+schema_version: "1.0"
+
+extension:
+  id: "jira"                      # 唯一标识符（小写，连字符）
+  name: "Jira Integration"
+  version: "1.0.0"
+  description: "从 spec-kit 工件创建 Jira Epics/Stories/Issues"
+  author: "Your Org"
+  repository: "https://github.com/your-org/spec-kit-jira"
+  license: "MIT"
+
+requires:
+  speckit_version: ">=0.1.0,<2.0.0"   # 兼容的 spec-kit 版本范围
+  tools:                               # 依赖的外部工具（可选）
+    - name: "jira-mcp-server"
+      required: true
+
+provides:
+  commands:                            # 新增的 AI 命令
+    - name: "speckit.jira.specstoissues"   # 命名规范：speckit.<ext>.<cmd>
+      file: "commands/specstoissues.md"
+      description: "从 spec 和 tasks 创建 Jira 层级"
+
+hooks:                                 # 注册到核心命令的 Hook（可选）
+  after_tasks:
+    command: "speckit.jira.specstoissues"
+    optional: true
+    prompt: "是否从任务创建 Jira Issues？"
+
+tags:
+  - "issue-tracking"
+  - "jira"
+```
+
+### 命令命名规范
+
+Extension 提供的命令统一遵循 `speckit.<ext-id>.<command>` 格式：
+
+```
+/speckit.jira.specstoissues     ← jira extension 的命令
+/speckit.linear.sync            ← linear extension 的命令
+/speckit.checkpoint.save        ← checkpoint extension 的命令
+```
+
+安装 Extension 后，CLI 会自动将命令注册到所有已安装的 AI Agent 目录（`.claude/commands/`、`.gemini/commands/` 等）。
+
+### CLI 命令汇总
+
+```bash
+# 搜索
+specify extension search                  # 列出所有可用 Extension
+specify extension search jira             # 按关键词搜索
+specify extension search --tag issue-tracking  # 按标签搜索
+specify extension info jira               # 查看详情
+
+# 安装
+specify extension add jira                # 从官方/社区目录安装
+specify extension add --from <zip-url>    # 从 URL 安装（绕过目录限制）
+specify extension add --dev /path/to/ext  # 从本地目录安装（开发模式）
+
+# 管理
+specify extension list                    # 列出已安装的 Extension
+specify extension remove jira             # 卸载
+specify extension update jira             # 更新到最新版
+specify extension update --all            # 更新所有
+specify extension enable jira             # 启用
+specify extension disable jira            # 禁用（保留文件）
+specify extension set-priority jira 5     # 设置优先级（影响模板解析顺序）
+```
+
+### Extension 安装流程
+
+```
+specify extension add jira
+    ↓
+1. 从目录解析下载地址
+2. 下载 ZIP 包
+3. 校验清单 & 兼容性检查
+4. 解压到 .specify/extensions/jira/
+5. 注册命令到所有 AI Agent 目录
+6. 在 .specify/extensions/.registry 记录元数据
+7. 在 .specify/extensions.yml 注册 Hook（如有）
+```
+
+---
+
+## Hook 系统
+
+Hook 是在**核心命令执行完成后**自动触发的扩展点，由 Extension 在 `extension.yml` 中定义，安装时写入 `.specify/extensions.yml`。
+
+### 支持的 Hook 点
+
+所有核心命令都支持 `before_*` 和 `after_*` 两种 Hook：
+
+| Hook 点 | 触发时机 |
+|---------|---------|
+| `before_specify` / `after_specify` | `/speckit.specify` 执行前/后 |
+| `before_plan` / `after_plan` | `/speckit.plan` 执行前/后 |
+| `before_tasks` / `after_tasks` | `/speckit.tasks` 执行前/后 |
+| `before_implement` / `after_implement` | `/speckit.implement` 执行前/后 |
+| `before_analyze` / `after_analyze` | `/speckit.analyze` 执行前/后 |
+| `before_checklist` / `after_checklist` | `/speckit.checklist` 执行前/后 |
+
+### .specify/extensions.yml 结构
+
+Extension 安装后 Hook 信息写入此文件：
+
+```yaml
+hooks:
+  after_tasks:
+    - extension: jira
+      command: speckit.jira.specstoissues
+      enabled: true
+      optional: true
+      prompt: "是否从任务创建 Jira Issues？"
+
+  after_implement:
+    - extension: jira
+      command: speckit.jira.sync-status
+      enabled: true
+      optional: true
+      prompt: "是否同步完成状态到 Jira？"
+```
+
+### Hook 执行机制
+
+Hook 是嵌入在**核心命令模板末尾**的检查逻辑（AI 层面执行，非 CLI 层面）：
+
+```
+/speckit.tasks 执行完毕
+    ↓
+核心命令末尾：检查 .specify/extensions.yml 中的 after_tasks hooks
+    ↓
+发现 jira 的 after_tasks hook（optional: true）
+    ↓
+AI 向用户提示："是否从任务创建 Jira Issues？"
+    ├── 用户回答 y → AI 执行 /speckit.jira.specstoissues
+    └── 用户回答 n → 跳过
+```
+
+**注意**：`optional: true` 的 Hook 会询问用户；`optional: false`（未设置）的 Hook 会自动执行。Extension 被 `disable` 后其 Hook 也不会执行。
+
+### Extension 配置分层
+
+Extension 的配置按以下优先级合并（高到低）：
+
+```
+环境变量（SPECKIT_<EXT>_*）           ← 最高优先级
+    ↓
+.specify/extensions/<ext>/<ext>-config.local.yml  ← 本地覆盖（gitignore）
+    ↓
+.specify/extensions/<ext>/<ext>-config.yml        ← 项目级配置
+    ↓
+extension.yml 中的 defaults                       ← Extension 默认值
+```
+
+---
+
+## 模板与命令覆盖系统
+
+### 四层优先级解析
+
+Spec Kit 在解析模板和命令时遵循以下优先级（从高到低，先找到先用）：
+
+```
+优先级（从高到低）：
+
+1. .specify/templates/overrides/           ← 项目本地覆盖（最高优先级）
+2. .specify/presets/<preset-id>/           ← 已安装的 Preset
+3. .specify/extensions/<ext-id>/templates/ ← Extension 提供的模板
+4. .specify/templates/                     ← 核心模板（Spec Kit 默认）
+```
+
+### 覆盖范围
+
+**templates 和 commands 都支持覆盖**，统一放在 `.specify/templates/overrides/` 目录下：
+
+| 类型 | 覆盖路径 | 示例 |
+|------|---------|------|
+| 模板文件 | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
+| 命令文件 | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
+| 脚本文件 | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
+
+### 部分覆盖
+
+**可以只覆盖部分模板**，不需要覆盖全部。resolver 是 first-match 逻辑：覆盖目录里有的文件使用覆盖版本，没有的文件继续向下一层找默认版本。例如只创建两个文件即可只覆盖两个模板：
+
+```
+.specify/templates/overrides/
+  spec-template.md      ← 只覆盖这两个
+  plan-template.md      ← 其余 4 个仍使用默认版本
+```
+
+### 验证生效
+
+```bash
+# 检查某个模板实际使用哪个文件（名称不带文件后缀）
+specify preset resolve spec-template
+specify preset resolve speckit.specify
+```
+
+> **注意**：`resolve` 命令接受的是**不带文件后缀**的名称（不要加 `.md`），带后缀会导致找不到结果。
+
+### 与 Preset 的关系
+
+- **overrides/**：单个项目的一次性自定义，优先级最高
+- **Preset**：打包好的覆盖集合，可跨项目复用，通过 `specify preset add` 安装
+- 两者可以同时使用，overrides 始终覆盖 Preset

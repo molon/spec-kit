@@ -13,7 +13,7 @@ Spec Kit is a **Spec-Driven Development (SDD)** toolkit that helps development t
 
 ## Workflow Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         Spec Kit Development Workflow                        │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -243,7 +243,7 @@ This iterative refinement process is part of Spec Kit's design, ensuring that fi
 
 **Task Format**:
 
-```
+```text
 - [ ] T001 [P] [US1] Description file-path
 ```
 
@@ -281,6 +281,7 @@ This iterative refinement process is part of Spec Kit's design, ensuring that fi
 **Output**: Analysis report (no file writes)
 
 **Analysis Content**:
+
 | Category | Checks |
 |----------|--------|
 | Duplication Detection | Near-duplicate requirements |
@@ -466,7 +467,7 @@ _Gating: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Constitution Dependency Diagram
 
-```
+```text
 constitution.md (Source of Truth)
     │
     ├─→ /speckit.constitution command (read + update + consistency propagation) ⭐
@@ -492,62 +493,9 @@ Note: The following commands do NOT directly read constitution:
 - /speckit.taskstoissues
 ```
 
-## Template & Command Override System
-
-### Four-Layer Priority Resolution
-
-Spec Kit resolves templates and commands using the following priority order (highest to lowest; first match wins):
-
-```
-Priority (highest to lowest):
-
-1. .specify/templates/overrides/           ← Project-local overrides (highest priority)
-2. .specify/presets/<preset-id>/           ← Installed presets
-3. .specify/extensions/<ext-id>/templates/ ← Extension-provided templates
-4. .specify/templates/                     ← Core templates (Spec Kit defaults)
-```
-
-### Override Scope
-
-**Both templates and commands support overrides**, all placed under `.specify/templates/overrides/`:
-
-| Type | Override Path | Example |
-|------|--------------|---------|
-| Template files | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
-| Command files | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
-| Script files | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
-
-### Partial Overrides
-
-**You can override only some templates** — no need to override all of them. The resolver uses first-match logic: files present in the overrides directory use the override version; files not present fall through to the next layer. For example, creating just two files overrides only those two templates:
-
-```
-.specify/templates/overrides/
-  spec-template.md      ← only these two are overridden
-  plan-template.md      ← remaining 4 still use default versions
-```
-
-### Verify Override
-
-```bash
-# Check which file a template actually resolves to (name without file extension)
-specify preset resolve spec-template
-specify preset resolve speckit.specify
-```
-
-> **Note**: `resolve` accepts names **without file extensions** (do not append `.md`). Adding a suffix will result in no match.
-
-### Relationship with Presets
-
-- **overrides/**: One-off customization for a single project; highest priority
-- **Preset**: Packaged set of overrides for cross-project reuse; installed via `specify preset add`
-- Both can coexist; overrides always take precedence over presets
-
----
-
 ## Directory Structure
 
-```
+```text
 project/
 ├── .specify/                        # Spec Kit core directory (created by specify init)
 │   ├── memory/
@@ -565,19 +513,27 @@ project/
 │       ├── plan-template.md         # Implementation plan template
 │       ├── spec-template.md         # Feature spec template
 │       └── tasks-template.md        # Task list template
-├── .windsurf/                       # Windsurf IDE integration (other AI tools have corresponding dirs)
-│   ├── rules/                       # Windsurf rules
-│   │   └── specify-rules.md         # AI Agent rules (generated/updated by update-agent-context.sh)
-│   └── workflows/                   # Windsurf workflows (command definitions)
-│       ├── speckit.analyze.md       # Consistency analysis command
-│       ├── speckit.checklist.md     # Checklist command
-│       ├── speckit.clarify.md       # Clarify spec command
-│       ├── speckit.constitution.md  # Constitution management command
-│       ├── speckit.implement.md     # Implementation execution command
-│       ├── speckit.plan.md          # Implementation plan command
-│       ├── speckit.specify.md       # Spec definition command
-│       ├── speckit.tasks.md         # Task generation command
-│       └── speckit.taskstoissues.md # Tasks to Issues command
+├── CLAUDE.md                        # Claude Code context rules (generated/updated by update-agent-context.sh)
+├── .claude/                         # Claude Code integration (other AI tools have corresponding dirs)
+│   └── skills/                      # Claude Skills (command definitions)
+│       ├── speckit-analyze/
+│       │   └── SKILL.md             # Consistency analysis command
+│       ├── speckit-checklist/
+│       │   └── SKILL.md             # Checklist command
+│       ├── speckit-clarify/
+│       │   └── SKILL.md             # Clarify spec command
+│       ├── speckit-constitution/
+│       │   └── SKILL.md             # Constitution management command
+│       ├── speckit-implement/
+│       │   └── SKILL.md             # Implementation execution command
+│       ├── speckit-plan/
+│       │   └── SKILL.md             # Implementation plan command
+│       ├── speckit-specify/
+│       │   └── SKILL.md             # Spec definition command
+│       ├── speckit-tasks/
+│       │   └── SKILL.md             # Task generation command
+│       └── speckit-taskstoissues/
+│           └── SKILL.md             # Tasks to Issues command
 └── specs/                           # Feature specs directory (generated at runtime)
     └── 001-feature-name/            # Feature directory (created by /speckit.specify)
         ├── spec.md                  # Feature specification (/speckit.specify)
@@ -670,7 +626,7 @@ The `/speckit.plan` command generates multiple design artifacts in Phase 1, whic
 
 ### Artifact Flow Diagram
 
-```
+```text
                         ┌─────────────────────────────────────┐
                         │        /speckit.constitution        │
                         │  Read/Update: constitution.md       │
@@ -700,7 +656,7 @@ The `/speckit.plan` command generates multiple design artifacts in Phase 1, whic
 │      │                                                                 │ │
 │      ├─→ research.md (Phase 0)                                         │ │
 │      ├─→ data-model.md, contracts/, quickstart.md (Phase 1)            │ │
-│      └─→ Auto-trigger update-agent-context.sh → specify-rules.md       │ │
+│      └─→ Auto-trigger update-agent-context.sh → CLAUDE.md              │ │
 │      │                                                                 │ │
 │      ▼                                                                 │ │
 │  /speckit.tasks ◀── Read: plan.md, spec.md, [data-model, contracts...] │ │
@@ -737,7 +693,7 @@ The `/speckit.plan` command generates multiple design artifacts in Phase 1, whic
 
 **Official Recommended Execution Order** (from quickstart.md):
 
-```
+```text
 constitution → specify → clarify → plan → tasks → analyze → implement
                                                      ↑
                                             checklist (optional, anytime)
@@ -754,12 +710,12 @@ Spec Kit supports multiple AI coding assistants (Claude, Windsurf, Cursor, Copil
 | File                      | Location                 | Description                       |
 | ------------------------- | ------------------------ | --------------------------------- |
 | `agent-file-template.md`  | `.specify/templates/`    | Template for AI Agent rules files |
-| `specify-rules.md`        | `.windsurf/rules/` etc.  | Generated AI Agent rules file     |
+| `CLAUDE.md`               | Project root             | Generated AI Agent context file (Claude Code) |
 | `update-agent-context.sh` | `.specify/scripts/bash/` | Update script                     |
 
 ### Workflow
 
-```
+```text
 plan.md (project metadata source)
     │
     ▼
@@ -767,10 +723,10 @@ update-agent-context.sh (parses plan.md)
     │
     ├─→ Reads agent-file-template.md (template)
     │
-    └─→ Generates/updates rules files for each AI tool
-        ├─→ .windsurf/rules/specify-rules.md
-        ├─→ .cursor/rules/specify-rules.mdc
-        ├─→ CLAUDE.md
+    └─→ Generates/updates context files for each AI tool
+        ├─→ CLAUDE.md (Claude Code)
+        ├─→ .cursor/rules/specify-rules.mdc (Cursor)
+        ├─→ .windsurf/rules/specify-rules.md (Windsurf)
         └─→ Other AI tool files...
 ```
 
@@ -792,8 +748,8 @@ Can also be run manually:
 ./.specify/scripts/bash/update-agent-context.sh
 
 # Update only a specific AI tool's rules file
-./.specify/scripts/bash/update-agent-context.sh windsurf
 ./.specify/scripts/bash/update-agent-context.sh claude
+./.specify/scripts/bash/update-agent-context.sh windsurf
 ```
 
 ### Manual Run Scenarios
@@ -885,3 +841,229 @@ Before submitting a PR, it's recommended to:
 1. **Manual verification is required**: After constitution updates, manually run `/speckit.analyze`
 2. **Existing artifacts need manual updates**: After constitution updates, manually regenerate affected artifacts
 3. **Constitution conflicts are CRITICAL**: `/speckit.analyze` marks constitution conflicts as CRITICAL level
+
+---
+
+## Extension System
+
+Extensions are Spec Kit's **user-facing modular add-on mechanism** for integrating external tools (Jira, Linear, etc.) or adding custom workflows, without modifying the core spec-kit.
+
+### Core Concepts
+
+- Extensions are installed to `.specify/extensions/<ext-id>/`
+- Each extension has a declarative `extension.yml` manifest
+- Extensions can **add commands** (registered into AI Agent command directories)
+- Extensions can **register hooks** (triggered automatically after core commands)
+- Extensions can **provide templates** (participate in the four-layer resolution stack)
+
+### extension.yml Manifest Structure
+
+```yaml
+schema_version: "1.0"
+
+extension:
+  id: "jira"                      # Unique identifier (lowercase, hyphens)
+  name: "Jira Integration"
+  version: "1.0.0"
+  description: "Create Jira Epics/Stories/Issues from spec-kit artifacts"
+  author: "Your Org"
+  repository: "https://github.com/your-org/spec-kit-jira"
+  license: "MIT"
+
+requires:
+  speckit_version: ">=0.1.0,<2.0.0"   # Compatible spec-kit version range
+  tools:                               # External tool dependencies (optional)
+    - name: "jira-mcp-server"
+      required: true
+
+provides:
+  commands:                            # New AI commands provided
+    - name: "speckit.jira.specstoissues"   # Naming: speckit.<ext>.<cmd>
+      file: "commands/specstoissues.md"
+      description: "Create Jira hierarchy from spec and tasks"
+
+hooks:                                 # Hooks registered on core commands (optional)
+  after_tasks:
+    command: "speckit.jira.specstoissues"
+    optional: true
+    prompt: "Create Jira issues from tasks?"
+
+tags:
+  - "issue-tracking"
+  - "jira"
+```
+
+### Command Naming Convention
+
+Extension commands follow the `speckit.<ext-id>.<command>` format:
+
+```text
+/speckit.jira.specstoissues     ← command from jira extension
+/speckit.linear.sync            ← command from linear extension
+/speckit.checkpoint.save        ← command from checkpoint extension
+```
+
+After installation, the CLI automatically registers commands into all installed AI Agent directories (`.claude/commands/`, `.gemini/commands/`, etc.).
+
+### CLI Command Reference
+
+```bash
+# Discovery
+specify extension search                       # List all available extensions
+specify extension search jira                  # Search by keyword
+specify extension search --tag issue-tracking  # Search by tag
+specify extension info jira                    # Show details
+
+# Installation
+specify extension add jira                     # Install from official/community catalog
+specify extension add --from <zip-url>         # Install from URL (bypasses catalog restriction)
+specify extension add --dev /path/to/ext       # Install from local directory (dev mode)
+
+# Management
+specify extension list                         # List installed extensions
+specify extension remove jira                  # Uninstall
+specify extension update jira                  # Update to latest version
+specify extension update --all                 # Update all
+specify extension enable jira                  # Enable
+specify extension disable jira                 # Disable (preserves files)
+specify extension set-priority jira 5          # Set priority (affects template resolution order)
+```
+
+### Extension Installation Flow
+
+```text
+specify extension add jira
+    ↓
+1. Resolve download URL from catalog
+2. Download ZIP package
+3. Validate manifest & check compatibility
+4. Extract to .specify/extensions/jira/
+5. Register commands into all AI Agent directories
+6. Record metadata in .specify/extensions/.registry
+7. Register hooks in .specify/extensions.yml (if any)
+```
+
+---
+
+## Hook System
+
+Hooks are extension points that **trigger automatically after core commands complete**, defined by extensions in `extension.yml` and written to `.specify/extensions.yml` at install time.
+
+### Supported Hook Points
+
+All core commands support both `before_*` and `after_*` hooks:
+
+| Hook Point | Trigger Timing |
+|-----------|---------------|
+| `before_specify` / `after_specify` | Before/after `/speckit.specify` |
+| `before_plan` / `after_plan` | Before/after `/speckit.plan` |
+| `before_tasks` / `after_tasks` | Before/after `/speckit.tasks` |
+| `before_implement` / `after_implement` | Before/after `/speckit.implement` |
+| `before_analyze` / `after_analyze` | Before/after `/speckit.analyze` |
+| `before_checklist` / `after_checklist` | Before/after `/speckit.checklist` |
+
+### .specify/extensions.yml Structure
+
+Hook registrations written here during extension installation:
+
+```yaml
+hooks:
+  after_tasks:
+    - extension: jira
+      command: speckit.jira.specstoissues
+      enabled: true
+      optional: true
+      prompt: "Create Jira issues from tasks?"
+
+  after_implement:
+    - extension: jira
+      command: speckit.jira.sync-status
+      enabled: true
+      optional: true
+      prompt: "Sync completion status to Jira?"
+```
+
+### Hook Execution Mechanism
+
+Hooks are check logic **embedded at the end of core command templates** (executed at the AI level, not CLI level):
+
+```text
+/speckit.tasks completes
+    ↓
+Core command tail: check after_tasks hooks in .specify/extensions.yml
+    ↓
+Found jira's after_tasks hook (optional: true)
+    ↓
+AI prompts user: "Create Jira issues from tasks?"
+    ├── User answers y → AI executes /speckit.jira.specstoissues
+    └── User answers n → skip
+```
+
+**Note**: Hooks with `optional: true` prompt the user; hooks without it (or `optional: false`) auto-execute. Disabled extensions also have their hooks skipped.
+
+### Extension Configuration Layers
+
+Extension configuration is merged in priority order (highest to lowest):
+
+```text
+Environment variables (SPECKIT_<EXT>_*)                           ← highest
+    ↓
+.specify/extensions/<ext>/<ext>-config.local.yml  ← local overrides (gitignored)
+    ↓
+.specify/extensions/<ext>/<ext>-config.yml        ← project-level config
+    ↓
+defaults in extension.yml                         ← extension defaults
+```
+
+---
+
+## Template & Command Override System
+
+### Four-Layer Priority Resolution
+
+Spec Kit resolves templates and commands using the following priority order (highest to lowest; first match wins):
+
+```text
+Priority (highest to lowest):
+
+1. .specify/templates/overrides/           ← Project-local overrides (highest priority)
+2. .specify/presets/<preset-id>/           ← Installed presets
+3. .specify/extensions/<ext-id>/templates/ ← Extension-provided templates
+4. .specify/templates/                     ← Core templates (Spec Kit defaults)
+```
+
+### Override Scope
+
+**Both templates and commands support overrides**, all placed under `.specify/templates/overrides/`:
+
+| Type | Override Path | Example |
+|------|--------------|---------|
+| Template files | `.specify/templates/overrides/<name>.md` | `overrides/spec-template.md` |
+| Command files | `.specify/templates/overrides/<name>.md` | `overrides/speckit.specify.md` |
+| Script files | `.specify/templates/overrides/scripts/<name>.sh` | `overrides/scripts/create-new-feature.sh` |
+
+### Partial Overrides
+
+**You can override only some templates** — no need to override all of them. The resolver uses first-match logic: files present in the overrides directory use the override version; files not present fall through to the next layer. For example, creating just two files overrides only those two templates:
+
+```text
+.specify/templates/overrides/
+  spec-template.md      ← only these two are overridden
+  plan-template.md      ← remaining 4 still use default versions
+```
+
+### Verify Override
+
+```bash
+# Check which file a template actually resolves to (name without file extension)
+specify preset resolve spec-template
+specify preset resolve speckit.specify
+```
+
+> **Note**: `resolve` accepts names **without file extensions** (do not append `.md`). Adding a suffix will result in no match.
+
+### Relationship with Presets
+
+- **overrides/**: One-off customization for a single project; highest priority
+- **Preset**: Packaged set of overrides for cross-project reuse; installed via `specify preset add`
+- Both can coexist; overrides always take precedence over presets
